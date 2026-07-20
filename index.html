@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>技術評核系統 - DIAGBOX 與 Stellantis 技術測驗</title>
+    <title>技術分享評核系統 - DIAGBOX 與 Stellantis 技術測驗</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -127,6 +127,27 @@
     });
 
     function startExam() {
+        // --- 新增的時間限制邏輯開始 ---
+        const now = new Date();
+        
+        // 設定允許測驗的開始與結束時間 (格式：YYYY-MM-DDTHH:mm:ss+08:00 代表台灣時間)
+        // 假設年份為 2026 年，您可以依需求修改年份
+        const startTime = new Date('2026-07-22T12:30:00+08:00');
+        const endTime = new Date('2026-07-22T13:30:00+08:00');
+
+        if (now < startTime) {
+            alert("測驗尚未開始！\n開放時間為：7/22 12:30 ~ 13:30");
+            return; // 終止執行，無法進入測驗
+        }
+        
+        if (now > endTime) {
+            alert("測驗已結束！\n開放時間為：7/22 12:30 ~ 13:30");
+            return; // 終止執行，無法進入測驗
+        }
+        // --- 新增的時間限制邏輯結束 ---
+
+
+        // 原本的驗證與啟動邏輯
         const d = document.getElementById("dealer-input").value.trim();
         const n = document.getElementById("name-input").value.trim();
         if (!d || !n) return alert("請輸入經銷商與姓名！");
