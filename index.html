@@ -8,19 +8,16 @@
     <style>
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            /* 背景加上網點紋理與漸層 */
             background-color: #e2e8f0;
             background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
             background-size: 20px 20px;
         }
-        /* 玻璃擬物卡片風格 */
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.5);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
         }
-        /* 答對答錯的強化視覺 */
         .correct-ans { 
             background-color: #ecfdf5 !important; 
             border-color: #10b981 !important; 
@@ -37,7 +34,6 @@
         .blink-red { animation: blinker 1s linear infinite; color: #ef4444; font-weight: bold; }
         @keyframes blinker { 50% { opacity: 0; } }
         
-        /* 漸層文字 */
         .text-gradient {
             background-clip: text;
             -webkit-background-clip: text;
@@ -134,12 +130,11 @@
     </div>
 
 <script>
-    // Google 表單參數設定 (請替換為您自己的全新參數)
     const formUrl = "https://docs.google.com/forms/d/e/您新表單的專屬ID/formResponse";
-    const entryDealer = "entry.1111111"; // 對應第一題(經銷商)的 entry 碼
-    const entryName = "entry.2222222";   // 對應第二題(姓名)的 entry 碼
-    const entryScore = "entry.3333333";  // 對應第三題(分數)的 entry 碼
-    const entryDetails = "entry.4444444"; // 對應第四題(詳情)的 entry 碼
+    const entryDealer = "entry.1111111"; 
+    const entryName = "entry.2222222";   
+    const entryScore = "entry.3333333";  
+    const entryDetails = "entry.4444444"; 
 
     const quizData = [
         { q: "在 DiagBox Record 應用中，若選擇「個性化參數測量」，單次最多可以讀取幾個參數？", a: ["5個", "10個", "15個", "無限制"], c: 1 },
@@ -151,7 +146,7 @@
         { q: "在冷氣管路執行高壓液態循環清洗後，必須強制更換下列哪個零件？", a: ["冷氣壓縮機", "蒸發器", "乾燥瓶 / 乾燥包", "膨脹閥"], c: 2 },
         { q: "冷氣系統清洗完畢並更換乾燥瓶後，建議延長深度抽真空 (Deep Vacuum) 程序的實務時間為多久？", a: ["5到10分鐘", "15到30分鐘", "45到60分鐘", "至少120分鐘"], c: 2 },
         { q: "客戶反映 Giulia 車輛上鎖時方向燈呈現「快閃」狀態，且上鎖提示音不同以往。這通常代表系統偵測到什麼問題？", a: ["偵測到防盜系統本身異常", "偵測到車門狀態異常", "偵測到非法的車內入侵", "車內中控系統被誤觸"], c: 1 },
-        { q: "在使用 WiTECH 系統提交診斷報告時，原廠建議建立哪種語言的檔案，以避免後續 L1 升級 L2 時引發客訴風險？", a: ["僅建立英文原文報告", "僅建立中文翻譯報告", "中英文同時建檔", "建立中、英、法三種語言"], c: 2 },
+        { q: "在使用 WiTECH 系統提交診斷報告時，原廠建議建立哪種語言的檔案，以避免後續 L1 升級 L2 時引發客訴風險？", a: ["僅建立英文原文報告", "僅建立中文翻譯報告", "中英文同時建檔", "建立中、英,法三種語言"], c: 2 },
         { q: "在引擎運作參數中，「退點火」(Retard) 的防禦性任務主要目的是什麼？", a: ["為了讓氣缸壓力達到最大峰值以提升馬力", "降低排氣溫度並改善油耗", "當偵測到爆震異常或溫度過高時，強行延後點火以保護硬體", "幫助觸媒轉化器快速冷卻"], c: 2 },
         { q: "在 Alfa Romeo 的儀表燈號設計邏輯中，「黃色」燈號代表什麼等級的訊息？", a: ["停駛", "警戒", "作動", "輔助"], c: 1 },
         { q: "承上題，Alfa Romeo 儀表中的「藍色」燈號代表什麼含意？", a: ["停駛", "警戒", "作動", "輔助"], c: 3 },
@@ -190,7 +185,18 @@
     });
 
     function startExam() {
+        const now = new Date();
+        const startTime = new Date('2026-07-22T12:30:00+08:00');
+        const endTime = new Date('2026-07-22T13:30:00+08:00');
 
+        if (now < startTime) {
+            alert("測驗尚未開始！\n開放時間為：7/22 12:30 ~ 13:30");
+            return;
+        }
+        if (now > endTime) {
+            alert("測驗已結束！\n開放時間為：7/22 12:30 ~ 13:30");
+            return; 
+        }
 
         const d = document.getElementById("dealer-input").value.trim();
         const n = document.getElementById("name-input").value.trim();
@@ -205,7 +211,6 @@
             document.getElementById("login-screen").classList.add("hidden");
             const quiz = document.getElementById("quiz-screen");
             quiz.classList.remove("hidden");
-            // Trigger reflow
             void quiz.offsetWidth;
             quiz.classList.remove("opacity-0", "scale-95");
             
@@ -286,6 +291,9 @@
         document.getElementById("next-btn").classList.add("hidden");
         document.getElementById("feedback-box").classList.add("hidden");
         
+        // 💡 只清除單題計時器，確保總計時器 (state.interval) 不會被中斷
+        clearInterval(state.qInterval);
+        
         const qData = quizData[state.currentQ];
         document.getElementById("progress-text").innerText = `第 ${state.currentQ + 1} / ${quizData.length} 題`;
         document.getElementById("progress-bar").style.width = `${((state.currentQ + 1) / quizData.length) * 100}%`;
@@ -325,7 +333,7 @@
             state.score += 4; 
             logText = `Q${state.currentQ + 1}:[對] 技師選:${qData.a[selectedIndex]}`;
             fbBox.innerText = "✓ 答對了！";
-            fbBox.className = "p-5 rounded-xl mb-6 font-bold text-center text-lg shadow-sm border border-green-200 bg-green-50 text-green-700 block animate-bounce-short";
+            fbBox.className = "p-5 rounded-xl mb-6 font-bold text-center text-lg shadow-sm border border-green-200 bg-green-50 text-green-700 block";
         } else {
             btnElement.classList.remove("opacity-50");
             btnElement.classList.add("wrong-ans");
