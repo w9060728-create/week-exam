@@ -3,78 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>技術分享評核系統 - DIAGBOX 與 Stellantis 技術測驗</title>
+    <title>技術評核系統 - DIAGBOX 與 Stellantis 技術測驗</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .correct-ans { background-color: #d1fae5 !important; border-color: #10b981 !important; color: #065f46 !important; }
-        .wrong-ans { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important; }
-        .disabled-btn { pointer-events: none; opacity: 0.8; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            /* 背景加上網點紋理與漸層 */
+            background-color: #e2e8f0;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        /* 玻璃擬物卡片風格 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        }
+        /* 答對答錯的強化視覺 */
+        .correct-ans { 
+            background-color: #ecfdf5 !important; 
+            border-color: #10b981 !important; 
+            color: #047857 !important; 
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1) !important;
+            transform: scale(1.01);
+        }
+        .wrong-ans { 
+            background-color: #fef2f2 !important; 
+            border-color: #ef4444 !important; 
+            color: #b91c1c !important; 
+        }
+        .disabled-btn { pointer-events: none; opacity: 0.7; }
         .blink-red { animation: blinker 1s linear infinite; color: #ef4444; font-weight: bold; }
         @keyframes blinker { 50% { opacity: 0; } }
+        
+        /* 漸層文字 */
+        .text-gradient {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
     </style>
 </head>
-<body class="text-slate-800 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gradient-to-br from-slate-100 to-blue-50 text-slate-800 flex items-center justify-center min-h-screen p-4 selection:bg-blue-200">
 
-    <div id="login-screen" class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-        <h1 class="text-2xl font-bold text-center text-blue-900 mb-6">技術分享測驗</h1>
+    <div id="login-screen" class="glass-card p-10 rounded-3xl w-full max-w-md transition-all duration-500">
+        <div class="text-center mb-8">
+            <span class="inline-block p-3 rounded-2xl bg-blue-50 mb-3 shadow-inner">
+                <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            </span>
+            <h1 class="text-3xl font-extrabold text-gradient bg-gradient-to-r from-blue-700 to-cyan-600 tracking-tight">技術評核系統</h1>
+            <p class="text-sm text-slate-500 mt-2 font-medium">Stellantis 專業診斷技術測驗</p>
+        </div>
         
-        <div class="mb-4">
-            <label class="block text-sm font-semibold text-gray-700 mb-2">經銷商名稱</label>
-            <input type="text" id="dealer-input" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 bg-gray-50" placeholder="例如：星聯板橋廠">
+        <div class="space-y-5">
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2 ml-1">經銷商名稱</label>
+                <input type="text" id="dealer-input" class="w-full px-5 py-3.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 bg-white/50 shadow-sm transition-all text-slate-700 outline-none font-medium" placeholder="例如：板橋廠">
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2 ml-1">技師姓名</label>
+                <input type="text" id="name-input" class="w-full px-5 py-3.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 bg-white/50 shadow-sm transition-all text-slate-700 outline-none font-medium" placeholder="請輸入本名">
+            </div>
+
+            <button onclick="startExam()" class="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 text-lg tracking-wide mt-4">
+                開始進入評核
+            </button>
+        </div>
+    </div>
+
+    <div id="quiz-screen" class="hidden glass-card p-8 md:p-10 rounded-3xl w-full max-w-3xl relative transition-all duration-500">
+        
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div class="bg-blue-50 px-4 py-2 rounded-lg border border-blue-100 shadow-sm">
+                <span class="text-sm font-extrabold text-blue-700" id="progress-text">第 1 / 25 題</span>
+            </div>
+            
+            <div class="flex gap-3">
+                <div class="flex items-center gap-2 bg-red-50 px-4 py-2 rounded-lg border border-red-100 shadow-sm">
+                    <span class="text-sm font-bold text-red-600" id="q-timer-display">⏳ 本題: 02:00</span>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
+                    <span class="text-sm font-bold text-slate-700" id="timer-display">⏱️ 總時: 30:00</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="w-full bg-slate-100 rounded-full h-2.5 mb-8 shadow-inner overflow-hidden">
+            <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-2.5 rounded-full transition-all duration-500 ease-out" style="width: 4%"></div>
         </div>
 
-        <div class="mb-6">
-            <label class="block text-sm font-semibold text-gray-700 mb-2">技師姓名</label>
-            <input type="text" id="name-input" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 bg-gray-50" placeholder="請輸入本名">
-        </div>
+        <h2 id="question-text" class="text-xl md:text-2xl font-bold mb-8 leading-relaxed text-slate-800">題目載入中...</h2>
+        
+        <div id="options-container" class="space-y-4 mb-8"></div>
 
-        <button onclick="startExam()" class="w-full bg-blue-800 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-200">
-            開始進入評核
+        <div id="feedback-box" class="hidden p-5 rounded-xl mb-6 font-bold text-center text-lg shadow-sm border"></div>
+
+        <button id="next-btn" onclick="nextQuestion()" class="hidden w-full bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-800 hover:to-black text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 text-lg tracking-wide">
+            前往下一題 ➔
         </button>
     </div>
 
-    <div id="quiz-screen" class="hidden bg-white p-6 rounded-xl shadow-lg w-full max-w-2xl relative">
-        <div class="absolute top-4 right-6 text-xl font-mono text-slate-700" id="timer-display">⏱️ 30:00</div>
+    <div id="result-screen" class="hidden glass-card p-10 rounded-3xl w-full max-w-md text-center transition-all duration-500">
+        <div class="inline-block p-4 rounded-full bg-green-50 mb-4 shadow-inner">
+            <span class="text-5xl">🏆</span>
+        </div>
+        <h2 class="text-2xl font-extrabold text-slate-800 mb-2">評核完成</h2>
+        <p class="text-slate-500 font-medium mb-6">感謝您的參與，以下是您的測驗結果</p>
         
-        <div class="mb-6 mt-8">
-            <div class="flex justify-between items-center mb-2">
-                <div class="text-sm font-bold text-blue-600" id="progress-text">第 1 / 25 題</div>
-                <div class="text-sm font-bold text-red-500 bg-red-50 px-3 py-1 rounded-full" id="q-timer-display">⏳ 本題限時: 02:00</div>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-2">
-                <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 4%"></div>
-            </div>
+        <div class="bg-gradient-to-br from-blue-50 to-cyan-50 p-6 rounded-2xl border border-blue-100 mb-8 shadow-inner">
+            <div class="text-sm text-blue-600 font-bold mb-1">總得分</div>
+            <div id="final-score" class="text-7xl font-black text-gradient bg-gradient-to-r from-blue-600 to-cyan-600"></div>
         </div>
 
-        <h2 id="question-text" class="text-xl font-bold mb-6 leading-relaxed">題目載入中...</h2>
-        
-        <div id="options-container" class="space-y-3 mb-6"></div>
-
-        <div id="feedback-box" class="hidden p-4 rounded-lg mb-6 font-bold text-center"></div>
-
-        <button id="next-btn" onclick="nextQuestion()" class="hidden w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-lg transition duration-200">
-            下一題
-        </button>
-    </div>
-
-    <div id="result-screen" class="hidden bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center">
-        <h2 class="text-2xl font-bold text-slate-800 mb-2">評核完成</h2>
-        <div id="final-score" class="text-6xl font-extrabold text-blue-600 my-6"></div>
-        <div class="bg-blue-50 p-4 rounded-lg text-left text-sm text-blue-800 font-semibold leading-relaxed mb-6">
-            ✓ 經銷商：<span id="res-dealer"></span><br>
-            ✓ 姓名：<span id="res-name"></span><br>
-            ✓ 狀態：成績與答題詳情已安全同步至總部
+        <div class="bg-white p-5 rounded-xl border border-slate-100 text-left text-sm text-slate-600 font-medium leading-relaxed shadow-sm space-y-2">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                <span>經銷商：<span id="res-dealer" class="font-bold text-slate-800"></span></span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                <span>姓名：<span id="res-name" class="font-bold text-slate-800"></span></span>
+            </div>
+            <div class="flex items-center gap-2 mt-4 pt-3 border-t border-slate-100">
+                <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-green-600">成績與答題詳情已安全同步至總部</span>
+            </div>
         </div>
     </div>
 
 <script>
-    // Google 表單參數設定
-    const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSftyWqZ8Q8tkYGA6bQeSnP2nxZldQoPt2gH7mSXczpfnNloaA/formResponse";
-    const entryDealer = "entry.1741632433";
-    const entryName = "entry.1735160920";
-    const entryScore = "entry.609819735";
-    const entryDetails = "entry.1154807191";
+    // Google 表單參數設定 (請替換為您自己的全新參數)
+    const formUrl = "https://docs.google.com/forms/d/e/您新表單的專屬ID/formResponse";
+    const entryDealer = "entry.1111111"; // 對應第一題(經銷商)的 entry 碼
+    const entryName = "entry.2222222";   // 對應第二題(姓名)的 entry 碼
+    const entryScore = "entry.3333333";  // 對應第三題(分數)的 entry 碼
+    const entryDetails = "entry.4444444"; // 對應第四題(詳情)的 entry 碼
 
     const quizData = [
         { q: "在 DiagBox Record 應用中，若選擇「個性化參數測量」，單次最多可以讀取幾個參數？", a: ["5個", "10個", "15個", "無限制"], c: 1 },
@@ -98,7 +163,7 @@
         { q: "相較於僅具備縱向控制的 ACC 系統，HAS (高速公路輔助系統) 多結合了哪種控制邏輯？", a: ["橫向控制 (車道置中邏輯)", "懸吊高度控制", "自動變換車道超車", "遠端遙控停車"], c: 0 },
         { q: "當車輛儀表板上的 GPF (汽油微粒過濾器) 燈號與「警告燈」同步亮起時，代表什麼狀況？", a: ["微粒累積達到極限，需連續高速行駛燒結", "系統已發生故障無法自行再生，需回廠檢修", "正常現象，代表目前正在高溫清潔中", "需立即補充柴油/汽油微粒添加劑"], c: 1 }, 
         { q: "將 DiagBox 產出的 JDD 匯入試算表 (CSV) 後，若想快速分析車輛進場前幾天的故障情況，第一步最推薦的操作是什麼？", a: ["針對日期欄位進行排序 (A 到 Z)", "將所有故障碼轉換為圖表", "刪除所有空白的欄位", "重新計算所有參數的平均值"], c: 0 }, 
-        { q: "在執行 DiagBox Record 功能時，若車輛處於 IG OFF (點火開關關閉) 的休眠狀態，VSM除外系統是否能持續進行數據紀錄？", a: ["可以，系統會自動喚醒", "可以，只要不拔除 VCI 接頭即可", "不可以，IG OFF 時無法紀錄", "可以，但僅限紀錄電壓數據"], c: 2 }, 
+        { q: "在執行 DiagBox Record 功能時，若車輛處於 IG OFF (點火開關關閉) 的休眠狀態，系統是否能持續進行數據紀錄？", a: ["可以，系統會自動喚醒", "可以，只要不拔除 VCI 接頭即可", "不可以，IG OFF 時無法紀錄", "可以，但僅限紀錄電壓數據"], c: 2 }, 
         { q: "若要開啟並檢視本機內所有儲存的 DiagBox Record 內部詳細紀錄與圖表資料，技師必須在桌面上開啟哪一個專屬應用程式？", a: ["Service Box", "DiagBox MRI", "WiTECH 2.0", "JDD Analyzer"], c: 1 }, 
         { q: "在冷氣系統維修中執行「真空衰減測試」測漏時，標準作法是將系統抽至深真空後，靜置觀察約多長時間以確認壓力錶指針是否回升？", a: ["1 到 3 分鐘", "10 到 15 分鐘", "30 到 45 分鐘", "60 分鐘以上"], c: 1 }, 
         { q: "當儀表出現黃色燈號「Service Adaptive Cruise Control (ACC) System」時，這通常代表系統發生了什麼狀況？", a: ["前方攝影機被大雨或濃霧遮蔽", "前保險桿雷達表面積聚泥沙", "ACC 系統偵測到內部硬體或通訊故障，系統已自動鎖死", "車輛行駛速度低於 30 km/h"], c: 2 } 
@@ -107,11 +172,10 @@
     let state = {
         dealer: "", name: "", currentQ: 0, score: 0,
         logs: [], timer: 1800, interval: null, 
-        qTimer: 120, qInterval: null, // 新增單題計時狀態
+        qTimer: 120, qInterval: null,
         isAnswered: false, inProgress: false 
     };
 
-    // 終極防護一：攔截「上一頁」或「重新整理」
     window.addEventListener("beforeunload", function (e) {
         if (state.inProgress) {
             e.preventDefault();
@@ -119,7 +183,6 @@
         }
     });
 
-    // 終極防護二：網頁被強制關閉瞬間的「續命傳輸」
     window.addEventListener("visibilitychange", function() {
         if (document.visibilityState === 'hidden' && state.inProgress) {
             forceSubmit(true); 
@@ -127,50 +190,50 @@
     });
 
     function startExam() {
-        // --- 新增的時間限制邏輯開始 ---
+        // --- 時間限制邏輯 (若現在要測試，請先將這段註解掉！) ---
         const now = new Date();
-        
-        // 設定允許測驗的開始與結束時間 (格式：YYYY-MM-DDTHH:mm:ss+08:00 代表台灣時間)
-        // 假設年份為 2026 年，您可以依需求修改年份
         const startTime = new Date('2026-07-20T12:30:00+08:00');
         const endTime = new Date('2026-07-22T13:30:00+08:00');
 
         if (now < startTime) {
             alert("測驗尚未開始！\n開放時間為：7/22 12:30 ~ 13:30");
-            return; // 終止執行，無法進入測驗
+            return;
         }
-        
         if (now > endTime) {
             alert("測驗已結束！\n開放時間為：7/22 12:30 ~ 13:30");
-            return; // 終止執行，無法進入測驗
+            return; 
         }
-        // --- 新增的時間限制邏輯結束 ---
+        // --- 時間限制邏輯結束 ---
 
-
-        // 原本的驗證與啟動邏輯
         const d = document.getElementById("dealer-input").value.trim();
         const n = document.getElementById("name-input").value.trim();
-        if (!d || !n) return alert("請輸入經銷商與姓名！");
+        if (!d || !n) return alert("請完整填寫經銷商與姓名！");
 
         state.dealer = d; 
         state.name = n;
         state.inProgress = true; 
 
-        document.getElementById("login-screen").classList.add("hidden");
-        document.getElementById("quiz-screen").classList.remove("hidden");
-        
-        startGlobalTimer();
-        loadQuestion();
+        document.getElementById("login-screen").classList.add("opacity-0", "scale-95");
+        setTimeout(() => {
+            document.getElementById("login-screen").classList.add("hidden");
+            const quiz = document.getElementById("quiz-screen");
+            quiz.classList.remove("hidden");
+            // Trigger reflow
+            void quiz.offsetWidth;
+            quiz.classList.remove("opacity-0", "scale-95");
+            
+            startGlobalTimer();
+            loadQuestion();
+        }, 300);
     }
 
-    // 總計時器 (30分鐘)
     function startGlobalTimer() {
         const display = document.getElementById("timer-display");
         state.interval = setInterval(() => {
             state.timer--;
             let m = Math.floor(state.timer / 60).toString().padStart(2, '0');
             let s = (state.timer % 60).toString().padStart(2, '0');
-            display.innerText = `⏱️ ${m}:${s}`;
+            display.innerText = `⏱️ 總時: ${m}:${s}`;
 
             if (state.timer <= 300) display.classList.add("blink-red");
 
@@ -181,10 +244,9 @@
         }, 1000);
     }
 
-    // 單題計時器 (2分鐘)
     function startQuestionTimer() {
         clearInterval(state.qInterval);
-        state.qTimer = 120; // 120秒 = 2分鐘
+        state.qTimer = 120; 
         updateQTimerDisplay();
 
         state.qInterval = setInterval(() => {
@@ -202,13 +264,12 @@
         let m = Math.floor(state.qTimer / 60).toString().padStart(2, '0');
         let s = (state.qTimer % 60).toString().padStart(2, '0');
         const qDisplay = document.getElementById("q-timer-display");
-        qDisplay.innerText = `⏳ 本題限時: ${m}:${s}`;
+        qDisplay.innerText = `⏳ 本題: ${m}:${s}`;
         
-        // 最後 10 秒閃爍提示
         if(state.qTimer <= 10 && state.qTimer > 0) {
-            qDisplay.classList.add("blink-red");
+            qDisplay.parentElement.classList.add("animate-pulse", "bg-red-100", "border-red-300");
         } else {
-            qDisplay.classList.remove("blink-red");
+            qDisplay.parentElement.classList.remove("animate-pulse", "bg-red-100", "border-red-300");
         }
     }
 
@@ -221,14 +282,13 @@
         const allBtns = document.querySelectorAll(".option-btn");
         const fbBox = document.getElementById("feedback-box");
 
-        // 鎖定所有按鈕並標示正確答案
-        allBtns.forEach(b => b.classList.add("disabled-btn"));
+        allBtns.forEach(b => b.classList.add("disabled-btn", "opacity-50"));
+        allBtns[correctIndex].classList.remove("opacity-50");
         allBtns[correctIndex].classList.add("correct-ans");
 
-        // 紀錄與顯示回饋
         let logText = `Q${state.currentQ + 1}:[未答] 逾時未作答 / 正解:${qData.a[correctIndex]}`;
         fbBox.innerText = `⏳ 測驗逾時！本題未得分。正確答案應為：「${qData.a[correctIndex]}」`;
-        fbBox.className = "p-4 rounded-lg mb-6 font-bold text-center bg-orange-100 text-orange-800 block";
+        fbBox.className = "p-5 rounded-xl mb-6 font-bold text-center text-lg shadow-sm border border-orange-200 bg-orange-50 text-orange-700 block";
 
         state.logs.push(logText);
         document.getElementById("next-btn").classList.remove("hidden");
@@ -242,20 +302,19 @@
         const qData = quizData[state.currentQ];
         document.getElementById("progress-text").innerText = `第 ${state.currentQ + 1} / ${quizData.length} 題`;
         document.getElementById("progress-bar").style.width = `${((state.currentQ + 1) / quizData.length) * 100}%`;
-        document.getElementById("question-text").innerText = qData.q;
+        document.getElementById("question-text").innerText = `${state.currentQ + 1}. ${qData.q}`;
 
         const opts = document.getElementById("options-container");
         opts.innerHTML = "";
         
         qData.a.forEach((text, idx) => {
             const btn = document.createElement("button");
-            btn.className = "w-full text-left px-5 py-4 border-2 rounded-lg font-medium transition duration-150 hover:bg-gray-50 bg-white border-gray-200 option-btn";
+            btn.className = "w-full text-left px-6 py-4 border-2 rounded-xl font-medium transition-all duration-200 hover:bg-blue-50/50 hover:border-blue-300 bg-white border-slate-200 shadow-sm hover:shadow option-btn text-slate-700";
             btn.innerText = text;
             btn.onclick = () => selectAnswer(idx, btn);
             opts.appendChild(btn);
         });
 
-        // 啟動本題倒數計時
         startQuestionTimer();
     }
 
@@ -263,28 +322,31 @@
         if (state.isAnswered) return;
         state.isAnswered = true;
         
-        clearInterval(state.qInterval); // 答題後立刻停止單題計時器
+        clearInterval(state.qInterval); 
 
         const qData = quizData[state.currentQ];
         const correctIndex = qData.c;
         const allBtns = document.querySelectorAll(".option-btn");
         const fbBox = document.getElementById("feedback-box");
 
-        allBtns.forEach(b => b.classList.add("disabled-btn"));
+        allBtns.forEach(b => b.classList.add("disabled-btn", "opacity-50"));
 
         let logText = "";
         if (selectedIndex === correctIndex) {
+            btnElement.classList.remove("opacity-50");
             btnElement.classList.add("correct-ans");
-            state.score += 4; // 每題 4 分，總計 100 分
+            state.score += 4; 
             logText = `Q${state.currentQ + 1}:[對] 技師選:${qData.a[selectedIndex]}`;
             fbBox.innerText = "✓ 答對了！";
-            fbBox.className = "p-4 rounded-lg mb-6 font-bold text-center bg-green-100 text-green-800 block";
+            fbBox.className = "p-5 rounded-xl mb-6 font-bold text-center text-lg shadow-sm border border-green-200 bg-green-50 text-green-700 block animate-bounce-short";
         } else {
+            btnElement.classList.remove("opacity-50");
             btnElement.classList.add("wrong-ans");
+            allBtns[correctIndex].classList.remove("opacity-50");
             allBtns[correctIndex].classList.add("correct-ans");
             logText = `Q${state.currentQ + 1}:[錯] 技師選:${qData.a[selectedIndex]} / 正解:${qData.a[correctIndex]}`;
             fbBox.innerText = `✗ 答錯了！正確答案應為：「${qData.a[correctIndex]}」`;
-            fbBox.className = "p-4 rounded-lg mb-6 font-bold text-center bg-red-100 text-red-800 block";
+            fbBox.className = "p-5 rounded-xl mb-6 font-bold text-center text-lg shadow-sm border border-red-200 bg-red-50 text-red-700 block";
         }
 
         state.logs.push(logText);
@@ -300,17 +362,16 @@
         }
     }
 
-    // 背景強制傳送引擎
     function forceSubmit(isAborted) {
         if (!state.inProgress) return; 
         state.inProgress = false; 
-        clearInterval(state.interval); // 停止總計時器
-        clearInterval(state.qInterval); // 停止單題計時器
+        clearInterval(state.interval); 
+        clearInterval(state.qInterval); 
 
         let finalLogs = [...state.logs];
 
         if (isAborted) {
-            finalLogs.push("【警告：技師於此題強行關閉網頁或返回上一頁】");
+            finalLogs.push("【嚴重警告：技師於此題強行關閉網頁或返回上一頁，疑似作弊】");
         } else {
             while (state.currentQ < quizData.length) {
                 if(!state.isAnswered){
