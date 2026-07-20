@@ -17,11 +17,11 @@
 <body class="text-slate-800 flex items-center justify-center min-h-screen p-4">
 
     <div id="login-screen" class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-        <h1 class="text-2xl font-bold text-center text-blue-900 mb-6">技術評核系統</h1>
+        <h1 class="text-2xl font-bold text-center text-blue-900 mb-6">技術分享測驗</h1>
         
         <div class="mb-4">
             <label class="block text-sm font-semibold text-gray-700 mb-2">經銷商名稱</label>
-            <input type="text" id="dealer-input" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 bg-gray-50" placeholder="例如：板橋廠">
+            <input type="text" id="dealer-input" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 bg-gray-50" placeholder="例如：星聯板橋廠">
         </div>
 
         <div class="mb-6">
@@ -96,12 +96,12 @@
         { q: "當儀表板亮起「機油劣化更換提醒 (Engine Oil Change Required)」燈號時，車輛絕對不可再超過行駛多少公里，否則將導致保固失效？", a: ["0 公里 (需立即原地拖車)", "500 公里", "1000 公里", "只要定時補機油就無里程限制"], c: 1 },
         { q: "當儀表持續亮起 GPF (汽油微粒過濾器) 系統清潔進行中的燈號時，建議駕駛將車速保持在多少以上以配合系統再生？", a: ["30 km/h", "60 km/h", "100 km/h", "怠速原地靜置"], c: 1 },
         { q: "相較於僅具備縱向控制的 ACC 系統，HAS (高速公路輔助系統) 多結合了哪種控制邏輯？", a: ["橫向控制 (車道置中邏輯)", "懸吊高度控制", "自動變換車道超車", "遠端遙控停車"], c: 0 },
-        { q: "根據系統比較表，HAS (高速公路輔助系統) 允許作動的車速限制範圍約為多少？", a: ["僅限 30 km/h 以上", "0 ~ 145 km/h", "僅限 60 ~ 120 km/h", "無速度上限"], c: 1 },
-        { q: "根據 EDCT6 / MHEV 的技術通報，當車輛出現故障碼「P2887 01 (電氣故障未特徵化)」且無法啟動時，指向哪個核心零件故障？", a: ["48V 啟動機", "離合器控制泵執行器", "駐車撥叉鎖定電磁閥", "牽引電池電控單元 (TBMU)"], c: 2 },
-        { q: "MHEV 車型若因多重系統異常需要進行全車軟體升級，依據 TSB 規範的下載順序，第一個必須升級的 ECU 是哪一個？", a: ["CMM (引擎管理 ECU)", "DCT (混動雙離合變速箱 ECU)", "MCU (電動機 ECU)", "TBMU (牽引蓄電池電控單元)"], c: 2 },
-        { q: "儀表顯示「變速箱故障/異常」且伴隨故障碼 P0C2A 97 時，技術通報指示需更換哪個主要零件，並重新加注 4 公升專用油？", a: ["駐車撥叉鎖定電磁閥", "換檔執行器", "離合器控制泵執行器 (離合器控制機械油泵)", "直流變壓器 (DC_DC)"], c: 2 },
-        { q: "在 DiagBox Record 的波形分析中，車輛在水溫80度的「怠速」狀態下，哪一個感知器的訊號曲線出現「斷訊」或不規則波形是正常的現象？", a: ["含氧感知器", "汽油高壓泵控制訊號", "爆震感知器", "節氣門位置感知器"], c: 2 },
-        { q: "當儀表出現黃色燈號「Service Adaptive Cruise Control (ACC) System」時，這通常代表系統發生了什麼狀況？", a: ["前方攝影機被大雨或濃霧遮蔽", "前保險桿雷達表面積聚泥沙", "ACC 系統偵測到內部硬體或通訊故障，系統已自動鎖死", "車輛行駛速度低於 30 km/h"], c: 2 }
+        { q: "當車輛儀表板上的 GPF (汽油微粒過濾器) 燈號與「警告燈」同步亮起時，代表什麼狀況？", a: ["微粒累積達到極限，需連續高速行駛燒結", "系統已發生故障無法自行再生，需回廠檢修", "正常現象，代表目前正在高溫清潔中", "需立即補充柴油/汽油微粒添加劑"], c: 1 }, 
+        { q: "將 DiagBox 產出的 JDD 匯入試算表 (CSV) 後，若想快速分析車輛進場前幾天的故障情況，第一步最推薦的操作是什麼？", a: ["針對日期欄位進行排序 (A 到 Z)", "將所有故障碼轉換為圖表", "刪除所有空白的欄位", "重新計算所有參數的平均值"], c: 0 }, 
+        { q: "在執行 DiagBox Record 功能時，若車輛處於 IG OFF (點火開關關閉) 的休眠狀態，系統是否能持續進行數據紀錄？", a: ["可以，系統會自動喚醒", "可以，只要不拔除 VCI 接頭即可", "不可以，IG OFF 時無法紀錄", "可以，但僅限紀錄電壓數據"], c: 2 }, 
+        { q: "若要開啟並檢視本機內所有儲存的 DiagBox Record 內部詳細紀錄與圖表資料，技師必須在桌面上開啟哪一個專屬應用程式？", a: ["Service Box", "DiagBox MRI", "WiTECH 2.0", "JDD Analyzer"], c: 1 }, 
+        { q: "在冷氣系統維修中執行「真空衰減測試」測漏時，標準作法是將系統抽至深真空後，靜置觀察約多長時間以確認壓力錶指針是否回升？", a: ["1 到 3 分鐘", "10 到 15 分鐘", "30 到 45 分鐘", "60 分鐘以上"], c: 1 }, 
+        { q: "當儀表出現黃色燈號「Service Adaptive Cruise Control (ACC) System」時，這通常代表系統發生了什麼狀況？", a: ["前方攝影機被大雨或濃霧遮蔽", "前保險桿雷達表面積聚泥沙", "ACC 系統偵測到內部硬體或通訊故障，系統已自動鎖死", "車輛行駛速度低於 30 km/h"], c: 2 } 
     ];
 
     let state = {
@@ -254,7 +254,7 @@
         let logText = "";
         if (selectedIndex === correctIndex) {
             btnElement.classList.add("correct-ans");
-            state.score += 4; // 調整為每題 4 分，總計 100 分
+            state.score += 4; // 每題 4 分，總計 100 分
             logText = `Q${state.currentQ + 1}:[對] 技師選:${qData.a[selectedIndex]}`;
             fbBox.innerText = "✓ 答對了！";
             fbBox.className = "p-4 rounded-lg mb-6 font-bold text-center bg-green-100 text-green-800 block";
@@ -289,7 +289,7 @@
         let finalLogs = [...state.logs];
 
         if (isAborted) {
-            finalLogs.push("【警告：技師於此題強行關閉網頁或返回上一頁，】");
+            finalLogs.push("【警告：技師於此題強行關閉網頁或返回上一頁】");
         } else {
             while (state.currentQ < quizData.length) {
                 if(!state.isAnswered){
