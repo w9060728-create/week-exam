@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技術評核系統 - DIAGBOX 與 Stellantis 技術測驗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .correct-ans { background-color: #d1fae5 !important; border-color: #10b981 !important; color: #065f46 !important; }
+        .wrong-ans { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important; }
+        .disabled-btn { pointer-events: none; opacity: 0.8; }
+        .blink-red { animation: blinker 1s linear infinite; color: #ef4444; font-weight: bold; }
+        @keyframes blinker { 50% { opacity: 0; } }
+    </style>
+</head>
+<body class="text-slate-800 flex items-center justify-center min-h-screen p-4">
+
+    <div id="login-screen" class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+        <h1 class="text-2xl font-bold text-center text-blue-900 mb-6">技術評核系統</h1>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">經銷商名稱</label>
+            <input type="text" id="dealer-input" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 bg-gray-50" placeholder="例如：板橋廠">
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">技師姓名</label>
+            <input type="text" id="name-input" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 bg-gray-50" placeholder="請輸入本名">
+        </div>
+
+        <button onclick="startExam()" class="w-full bg-blue-800 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-200">
+            開始進入評核
+        </button>
+    </div>
+
+    <div id="quiz-screen" class="hidden bg-white p-6 rounded-xl shadow-lg w-full max-w-2xl relative">
+        <div class="absolute top-4 right-6 text-xl font-mono text-slate-700" id="timer-display">⏱️ 30:00</div>
+        
+        <div class="mb-6 mt-8">
+            <div class="flex justify-between items-center mb-2">
+                <div class="text-sm font-bold text-blue-600" id="progress-text">第 1 / 25 題</div>
+                <div class="text-sm font-bold text-red-500 bg-red-50 px-3 py-1 rounded-full" id="q-timer-display">⏳ 本題限時: 02:00</div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 4%"></div>
+            </div>
+        </div>
+
+        <h2 id="question-text" class="text-xl font-bold mb-6 leading-relaxed">題目載入中...</h2>
+        
+        <div id="options-container" class="space-y-3 mb-6"></div>
+
+        <div id="feedback-box" class="hidden p-4 rounded-lg mb-6 font-bold text-center"></div>
+
+        <button id="next-btn" onclick="nextQuestion()" class="hidden w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-lg transition duration-200">
+            下一題
+        </button>
+    </div>
+
+    <div id="result-screen" class="hidden bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center">
+        <h2 class="text-2xl font-bold text-slate-800 mb-2">評核完成</h2>
+        <div id="final-score" class="text-6xl font-extrabold text-blue-600 my-6"></div>
+        <div class="bg-blue-50 p-4 rounded-lg text-left text-sm text-blue-800 font-semibold leading-relaxed mb-6">
+            ✓ 經銷商：<span id="res-dealer"></span><br>
+            ✓ 姓名：<span id="res-name"></span><br>
+            ✓ 狀態：成績與答題詳情已安全同步至總部
+        </div>
+    </div>
+
+<script>
+    // Google 表單參數設定
+    const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSftyWqZ8Q8tkYGA6bQeSnP2nxZldQoPt2gH7mSXczpfnNloaA/formResponse";
+    const entryDealer = "entry.1741632433";
+    const entryName = "entry.1735160920";
+    const entryScore = "entry.609819735";
+    const entryDetails = "entry.1154807191";
+
+    const quizData = [
+        { q: "在 DiagBox Record 應用中，若選擇「個性化參數測量」，單次最多可以讀取幾個參數？", a: ["5個", "10個", "15個", "無限制"], c: 1 },
+        { q: "關於 DiagBox 診斷儀的「標準參數測量」功能，下列敘述何者正確？", a: ["可以跨電腦同時監控多個單元", "可以讀取個別單元的所有參數", "無法顯示任何參數解釋", "單次最多只能讀取十個參數"], c: 1 },
+        { q: "在進行 DiagBox JDD 分析前，若在監控過程中未按下哪個按鈕，將會導致監控數據完全遺失？", a: ["圖表顯示", "故障日誌", "標準參數測量", "清除故障碼"], c: 1 },
+        { q: "DiagBox 所產出的 JDD 檔案，需要匯入試算表進行詳細分析時，其原始檔案格式為何？", a: ["PDF", "CSV", "DOCX", "XML"], c: 1 },
+        { q: "使用 RECORD 功能時，單次最多可以紀錄幾筆資料？", a: ["1筆", "5筆", "10筆", "無上限"], c: 2 },
+        { q: "冷氣系統更換管路元件後，為什麼必須執行抽真空的程序？", a: ["為了測試冷氣壓縮機的最高壓力", "排除空氣以避免高壓異常，並抽離水分防止冰堵與酸化", "僅為了將舊的冷凍油完全吸出", "為了讓新冷媒能產生更高的沸點"], c: 1 },
+        { q: "在冷氣管路執行高壓液態循環清洗後，必須強制更換下列哪個零件？", a: ["冷氣壓縮機", "蒸發器", "乾燥瓶 / 乾燥包", "膨脹閥"], c: 2 },
+        { q: "冷氣系統清洗完畢並更換乾燥瓶後，建議延長深度抽真空 (Deep Vacuum) 程序的實務時間為多久？", a: ["5到10分鐘", "15到30分鐘", "45到60分鐘", "至少120分鐘"], c: 2 },
+        { q: "客戶反映 Giulia 車輛上鎖時方向燈呈現「快閃」狀態，且上鎖提示音不同以往。這通常代表系統偵測到什麼問題？", a: ["偵測到防盜系統本身異常", "偵測到車門狀態異常", "偵測到非法的車內入侵", "車內中控系統被誤觸"], c: 1 },
+        { q: "在使用 WiTECH 系統提交診斷報告時，原廠建議建立哪種語言的檔案，以避免後續 L1 升級 L2 時引發客訴風險？", a: ["僅建立英文原文報告", "僅建立中文翻譯報告", "中英文同時建檔", "建立中、英、法三種語言"], c: 2 },
+        { q: "在引擎運作參數中，「退點火」(Retard) 的防禦性任務主要目的是什麼？", a: ["為了讓氣缸壓力達到最大峰值以提升馬力", "降低排氣溫度並改善油耗", "當偵測到爆震異常或溫度過高時，強行延後點火以保護硬體", "幫助觸媒轉化器快速冷卻"], c: 2 },
+        { q: "在 Alfa Romeo 的儀表燈號設計邏輯中，「黃色」燈號代表什麼等級的訊息？", a: ["停駛", "警戒", "作動", "輔助"], c: 1 },
+        { q: "承上題，Alfa Romeo 儀表中的「藍色」燈號代表什麼含意？", a: ["停駛", "警戒", "作動", "輔助"], c: 3 },
+        { q: "依據原廠規範，Alfa Romeo 引擎機油的「最大正常損耗量」標準為多少？", a: ["100 克 / 每千公里", "250 克 / 每千公里", "400 克 / 每千公里", "1000 克 / 每千公里"], c: 2 },
+        { q: "車輛螢幕上的電子機油量尺共有 6 格，請問每 1 格對應的機油量約為多少？", a: ["100 毫升", "250 毫升", "400 毫升", "500 毫升"], c: 1 },
+        { q: "要獲得最準確的電子機油油位量測結果，必須在引擎溫熱(約90°C)並熄火後，等待多久時間再進行量測？", a: ["馬上量測", "5 分鐘", "30 分鐘", "完全冷車隔夜"], c: 1 },
+        { q: "當儀表板亮起「機油劣化更換提醒 (Engine Oil Change Required)」燈號時，車輛絕對不可再超過行駛多少公里，否則將導致保固失效？", a: ["0 公里 (需立即原地拖車)", "500 公里", "1000 公里", "只要定時補機油就無里程限制"], c: 1 },
+        { q: "當儀表持續亮起 GPF (汽油微粒過濾器) 系統清潔進行中的燈號時，建議駕駛將車速保持在多少以上以配合系統再生？", a: ["30 km/h", "60 km/h", "100 km/h", "怠速原地靜置"], c: 1 },
+        { q: "相較於僅具備縱向控制的 ACC 系統，HAS (高速公路輔助系統) 多結合了哪種控制邏輯？", a: ["橫向控制 (車道置中邏輯)", "懸吊高度控制", "自動變換車道超車", "遠端遙控停車"], c: 0 },
+        { q: "根據系統比較表，HAS (高速公路輔助系統) 允許作動的車速限制範圍約為多少？", a: ["僅限 30 km/h 以上", "0 ~ 145 km/h", "僅限 60 ~ 120 km/h", "無速度上限"], c: 1 },
+        { q: "根據 EDCT6 / MHEV 的技術通報，當車輛出現故障碼「P2887 01 (電氣故障未特徵化)」且無法啟動時，指向哪個核心零件故障？", a: ["48V 啟動機", "離合器控制泵執行器", "駐車撥叉鎖定電磁閥", "牽引電池電控單元 (TBMU)"], c: 2 },
+        { q: "MHEV 車型若因多重系統異常需要進行全車軟體升級，依據 TSB 規範的下載順序，第一個必須升級的 ECU 是哪一個？", a: ["CMM (引擎管理 ECU)", "DCT (混動雙離合變速箱 ECU)", "MCU (電動機 ECU)", "TBMU (牽引蓄電池電控單元)"], c: 2 },
+        { q: "儀表顯示「變速箱故障/異常」且伴隨故障碼 P0C2A 97 時，技術通報指示需更換哪個主要零件，並重新加注 4 公升專用油？", a: ["駐車撥叉鎖定電磁閥", "換檔執行器", "離合器控制泵執行器 (離合器控制機械油泵)", "直流變壓器 (DC_DC)"], c: 2 },
+        { q: "在 DiagBox Record 的波形分析中，車輛在水溫80度的「怠速」狀態下，哪一個感知器的訊號曲線出現「斷訊」或不規則波形是正常的現象？", a: ["含氧感知器", "汽油高壓泵控制訊號", "爆震感知器", "節氣門位置感知器"], c: 2 },
+        { q: "當儀表出現黃色燈號「Service Adaptive Cruise Control (ACC) System」時，這通常代表系統發生了什麼狀況？", a: ["前方攝影機被大雨或濃霧遮蔽", "前保險桿雷達表面積聚泥沙", "ACC 系統偵測到內部硬體或通訊故障，系統已自動鎖死", "車輛行駛速度低於 30 km/h"], c: 2 }
+    ];
+
+    let state = {
+        dealer: "", name: "", currentQ: 0, score: 0,
+        logs: [], timer: 1800, interval: null, 
+        qTimer: 120, qInterval: null, // 新增單題計時狀態
+        isAnswered: false, inProgress: false 
+    };
+
+    // 終極防護一：攔截「上一頁」或「重新整理」
+    window.addEventListener("beforeunload", function (e) {
+        if (state.inProgress) {
+            e.preventDefault();
+            e.returnValue = "測驗尚未完成，確定要離開嗎？進度將遺失。";
+        }
+    });
+
+    // 終極防護二：網頁被強制關閉瞬間的「續命傳輸」
+    window.addEventListener("visibilitychange", function() {
+        if (document.visibilityState === 'hidden' && state.inProgress) {
+            forceSubmit(true); 
+        }
+    });
+
+    function startExam() {
+        const d = document.getElementById("dealer-input").value.trim();
+        const n = document.getElementById("name-input").value.trim();
+        if (!d || !n) return alert("請輸入經銷商與姓名！");
+
+        state.dealer = d; 
+        state.name = n;
+        state.inProgress = true; 
+
+        document.getElementById("login-screen").classList.add("hidden");
+        document.getElementById("quiz-screen").classList.remove("hidden");
+        
+        startGlobalTimer();
+        loadQuestion();
+    }
+
+    // 總計時器 (30分鐘)
+    function startGlobalTimer() {
+        const display = document.getElementById("timer-display");
+        state.interval = setInterval(() => {
+            state.timer--;
+            let m = Math.floor(state.timer / 60).toString().padStart(2, '0');
+            let s = (state.timer % 60).toString().padStart(2, '0');
+            display.innerText = `⏱️ ${m}:${s}`;
+
+            if (state.timer <= 300) display.classList.add("blink-red");
+
+            if (state.timer <= 0) {
+                alert("總測驗時間到！系統將自動交卷。");
+                forceSubmit(false);
+            }
+        }, 1000);
+    }
+
+    // 單題計時器 (2分鐘)
+    function startQuestionTimer() {
+        clearInterval(state.qInterval);
+        state.qTimer = 120; // 120秒 = 2分鐘
+        updateQTimerDisplay();
+
+        state.qInterval = setInterval(() => {
+            state.qTimer--;
+            updateQTimerDisplay();
+
+            if (state.qTimer <= 0) {
+                clearInterval(state.qInterval);
+                handleQuestionTimeUp();
+            }
+        }, 1000);
+    }
+
+    function updateQTimerDisplay() {
+        let m = Math.floor(state.qTimer / 60).toString().padStart(2, '0');
+        let s = (state.qTimer % 60).toString().padStart(2, '0');
+        const qDisplay = document.getElementById("q-timer-display");
+        qDisplay.innerText = `⏳ 本題限時: ${m}:${s}`;
+        
+        // 最後 10 秒閃爍提示
+        if(state.qTimer <= 10 && state.qTimer > 0) {
+            qDisplay.classList.add("blink-red");
+        } else {
+            qDisplay.classList.remove("blink-red");
+        }
+    }
+
+    function handleQuestionTimeUp() {
+        if (state.isAnswered) return;
+        state.isAnswered = true;
+
+        const qData = quizData[state.currentQ];
+        const correctIndex = qData.c;
+        const allBtns = document.querySelectorAll(".option-btn");
+        const fbBox = document.getElementById("feedback-box");
+
+        // 鎖定所有按鈕並標示正確答案
+        allBtns.forEach(b => b.classList.add("disabled-btn"));
+        allBtns[correctIndex].classList.add("correct-ans");
+
+        // 紀錄與顯示回饋
+        let logText = `Q${state.currentQ + 1}:[未答] 逾時未作答 / 正解:${qData.a[correctIndex]}`;
+        fbBox.innerText = `⏳ 測驗逾時！本題未得分。正確答案應為：「${qData.a[correctIndex]}」`;
+        fbBox.className = "p-4 rounded-lg mb-6 font-bold text-center bg-orange-100 text-orange-800 block";
+
+        state.logs.push(logText);
+        document.getElementById("next-btn").classList.remove("hidden");
+    }
+
+    function loadQuestion() {
+        state.isAnswered = false;
+        document.getElementById("next-btn").classList.add("hidden");
+        document.getElementById("feedback-box").classList.add("hidden");
+        
+        const qData = quizData[state.currentQ];
+        document.getElementById("progress-text").innerText = `第 ${state.currentQ + 1} / ${quizData.length} 題`;
+        document.getElementById("progress-bar").style.width = `${((state.currentQ + 1) / quizData.length) * 100}%`;
+        document.getElementById("question-text").innerText = qData.q;
+
+        const opts = document.getElementById("options-container");
+        opts.innerHTML = "";
+        
+        qData.a.forEach((text, idx) => {
+            const btn = document.createElement("button");
+            btn.className = "w-full text-left px-5 py-4 border-2 rounded-lg font-medium transition duration-150 hover:bg-gray-50 bg-white border-gray-200 option-btn";
+            btn.innerText = text;
+            btn.onclick = () => selectAnswer(idx, btn);
+            opts.appendChild(btn);
+        });
+
+        // 啟動本題倒數計時
+        startQuestionTimer();
+    }
+
+    function selectAnswer(selectedIndex, btnElement) {
+        if (state.isAnswered) return;
+        state.isAnswered = true;
+        
+        clearInterval(state.qInterval); // 答題後立刻停止單題計時器
+
+        const qData = quizData[state.currentQ];
+        const correctIndex = qData.c;
+        const allBtns = document.querySelectorAll(".option-btn");
+        const fbBox = document.getElementById("feedback-box");
+
+        allBtns.forEach(b => b.classList.add("disabled-btn"));
+
+        let logText = "";
+        if (selectedIndex === correctIndex) {
+            btnElement.classList.add("correct-ans");
+            state.score += 4; // 調整為每題 4 分，總計 100 分
+            logText = `Q${state.currentQ + 1}:[對] 技師選:${qData.a[selectedIndex]}`;
+            fbBox.innerText = "✓ 答對了！";
+            fbBox.className = "p-4 rounded-lg mb-6 font-bold text-center bg-green-100 text-green-800 block";
+        } else {
+            btnElement.classList.add("wrong-ans");
+            allBtns[correctIndex].classList.add("correct-ans");
+            logText = `Q${state.currentQ + 1}:[錯] 技師選:${qData.a[selectedIndex]} / 正解:${qData.a[correctIndex]}`;
+            fbBox.innerText = `✗ 答錯了！正確答案應為：「${qData.a[correctIndex]}」`;
+            fbBox.className = "p-4 rounded-lg mb-6 font-bold text-center bg-red-100 text-red-800 block";
+        }
+
+        state.logs.push(logText);
+        document.getElementById("next-btn").classList.remove("hidden");
+    }
+
+    function nextQuestion() {
+        state.currentQ++;
+        if (state.currentQ < quizData.length) {
+            loadQuestion();
+        } else {
+            forceSubmit(false); 
+        }
+    }
+
+    // 背景強制傳送引擎
+    function forceSubmit(isAborted) {
+        if (!state.inProgress) return; 
+        state.inProgress = false; 
+        clearInterval(state.interval); // 停止總計時器
+        clearInterval(state.qInterval); // 停止單題計時器
+
+        let finalLogs = [...state.logs];
+
+        if (isAborted) {
+            finalLogs.push("【警告：技師於此題強行關閉網頁或返回上一頁，】");
+        } else {
+            while (state.currentQ < quizData.length) {
+                if(!state.isAnswered){
+                     finalLogs.push(`Q${state.currentQ + 1}:[未答] 未作答 / 正解:${quizData[state.currentQ].a[quizData[state.currentQ].c]}`);
+                }
+                state.currentQ++;
+                state.isAnswered = false;
+            }
+        }
+
+        const params = new URLSearchParams();
+        params.append(entryDealer, state.dealer);
+        params.append(entryName, state.name);
+        params.append(entryScore, state.score.toString());
+        params.append(entryDetails, finalLogs.join(" | "));
+
+        fetch(formUrl, {
+            method: "POST", mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: params.toString(),
+            keepalive: true 
+        }).catch(err => console.log(err));
+
+        if (!isAborted) {
+            document.getElementById("quiz-screen").classList.add("hidden");
+            document.getElementById("result-screen").classList.remove("hidden");
+            document.getElementById("res-dealer").innerText = state.dealer;
+            document.getElementById("res-name").innerText = state.name;
+            document.getElementById("final-score").innerText = state.score;
+        }
+    }
+</script>
+</body>
+</html>
