@@ -43,6 +43,15 @@
 </head>
 <body class="bg-gradient-to-br from-slate-100 to-blue-50 text-slate-800 flex items-center justify-center min-h-screen p-4 selection:bg-blue-200">
 
+    <!-- 🌟 終極穩定傳輸機制：隱藏 iframe 與實體 Form (防 50 人同時交卷被擋) -->
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+    <form id="google-form" action="https://docs.google.com/forms/d/e/您新表單的專屬ID/formResponse" method="POST" target="hidden_iframe" style="display:none;">
+        <input type="text" name="entry.1111111" id="gf-dealer">
+        <input type="text" name="entry.2222222" id="gf-name">
+        <input type="text" name="entry.3333333" id="gf-score">
+        <input type="text" name="entry.4444444" id="gf-details">
+    </form>
+
     <div id="login-screen" class="glass-card p-10 rounded-3xl w-full max-w-md transition-all duration-500">
         <div class="text-center mb-8">
             <span class="inline-block p-3 rounded-2xl bg-blue-50 mb-3 shadow-inner">
@@ -130,6 +139,7 @@
     </div>
 
 <script>
+    // ⚠️ 提醒：這裡要記得換回您真實的 Google Form URL 與 Entry ID！
     const formUrl = "https://docs.google.com/forms/d/e/您新表單的專屬ID/formResponse";
     const entryDealer = "entry.1111111"; 
     const entryName = "entry.2222222";   
@@ -169,6 +179,19 @@
         logs: [], timer: 1800, interval: null, 
         qTimer: 120, qInterval: null,
         isAnswered: false, inProgress: false 
+    };
+
+    let isFormSubmitted = false;
+
+    // 監聽 iframe 載入完成，代表資料已成功安全送達 Google 表單
+    document.getElementById('hidden_iframe').onload = function() {
+        if(isFormSubmitted) {
+            document.getElementById("quiz-screen").classList.add("hidden");
+            document.getElementById("result-screen").classList.remove("hidden");
+            document.getElementById("res-dealer").innerText = state.dealer;
+            document.getElementById("res-name").innerText = state.name;
+            document.getElementById("final-score").innerText = state.score;
+        }
     };
 
     window.addEventListener("beforeunload", function (e) {
@@ -357,47 +380,5 @@
         }
     }
 
-    function forceSubmit(isAborted) {
-        if (!state.inProgress) return; 
-        state.inProgress = false; 
-        clearInterval(state.interval); 
-        clearInterval(state.qInterval); 
-
-        let finalLogs = [...state.logs];
-
-        if (isAborted) {
-            finalLogs.push("【警告：技師於此題強行關閉網頁或返回上一頁】");
-        } else {
-            while (state.currentQ < quizData.length) {
-                if(!state.isAnswered){
-                     finalLogs.push(`Q${state.currentQ + 1}:[未答] 未作答 / 正解:${quizData[state.currentQ].a[quizData[state.currentQ].c]}`);
-                }
-                state.currentQ++;
-                state.isAnswered = false;
-            }
-        }
-
-        const params = new URLSearchParams();
-        params.append(entryDealer, state.dealer);
-        params.append(entryName, state.name);
-        params.append(entryScore, state.score.toString());
-        params.append(entryDetails, finalLogs.join(" | "));
-
-        fetch(formUrl, {
-            method: "POST", mode: "no-cors",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: params.toString(),
-            keepalive: true 
-        }).catch(err => console.log(err));
-
-        if (!isAborted) {
-            document.getElementById("quiz-screen").classList.add("hidden");
-            document.getElementById("result-screen").classList.remove("hidden");
-            document.getElementById("res-dealer").innerText = state.dealer;
-            document.getElementById("res-name").innerText = state.name;
-            document.getElementById("final-score").innerText = state.score;
-        }
-    }
-</script>
-</body>
-</html>
+    // 🏆 核心提交引擎：改用實體 HTML 表單，無懼任何防火牆與 Safari 隱私限制
+    function forceSub
