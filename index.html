@@ -1,9 +1,9 @@
-i<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>技術分享評核系統 - DIAGBOX 與 Stellantis 技術測驗</title>
+    <title>技術評核系統 - DIAGBOX 與 Stellantis 技術測驗（測試版）</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { 
@@ -43,22 +43,19 @@ i<!DOCTYPE html>
 </head>
 <body class="bg-gradient-to-br from-slate-100 to-blue-50 text-slate-800 flex items-center justify-center min-h-screen p-4 selection:bg-blue-200">
 
-    <!-- 🌟 終極穩定傳輸機制：隱藏 iframe 與實體 Form (防 50 人同時交卷被擋) -->
-    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
-    <form id="google-form" action="https://docs.google.com/forms/d/e/您新表單的專屬ID/formResponse" method="POST" target="hidden_iframe" style="display:none;">
-        <input type="text" name="entry.1111111" id="gf-dealer">
-        <input type="text" name="entry.2222222" id="gf-name">
-        <input type="text" name="entry.3333333" id="gf-score">
-        <input type="text" name="entry.4444444" id="gf-details">
-    </form>
+    <!-- ★★★★★ 測試模式提示條 ★★★★★
+         上線前記得回來把下面 CONFIG 區塊的 ENABLE_TIMERS / ENABLE_EXAM_WINDOW 改回 true -->
+    <div class="fixed top-0 left-0 w-full bg-amber-400 text-amber-900 text-center text-sm font-bold py-1.5 z-50 shadow">
+        ⚠️ 目前為【測試模式】：日期限制與計時器皆已關閉，僅供內部測試，正式考試前請記得改回來
+    </div>
 
-    <div id="login-screen" class="glass-card p-10 rounded-3xl w-full max-w-md transition-all duration-500">
+    <div id="login-screen" class="glass-card p-10 rounded-3xl w-full max-w-md transition-all duration-500 mt-8">
         <div class="text-center mb-8">
             <span class="inline-block p-3 rounded-2xl bg-blue-50 mb-3 shadow-inner">
                 <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
             </span>
             <h1 class="text-3xl font-extrabold text-gradient bg-gradient-to-r from-blue-700 to-cyan-600 tracking-tight">技術評核系統</h1>
-            <p class="text-sm text-slate-500 mt-2 font-medium">Stellantis 技術分享測驗</p>
+            <p class="text-sm text-slate-500 mt-2 font-medium">Stellantis 專業診斷技術測驗</p>
         </div>
         
         <div class="space-y-5">
@@ -73,19 +70,19 @@ i<!DOCTYPE html>
             </div>
 
             <button onclick="startExam()" class="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 text-lg tracking-wide mt-4">
-                開始進入評核
+                開始隨機抽題測驗
             </button>
         </div>
     </div>
 
-    <div id="quiz-screen" class="hidden glass-card p-8 md:p-10 rounded-3xl w-full max-w-3xl relative transition-all duration-500">
+    <div id="quiz-screen" class="hidden glass-card p-8 md:p-10 rounded-3xl w-full max-w-3xl relative transition-all duration-500 mt-8">
         
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div class="bg-blue-50 px-4 py-2 rounded-lg border border-blue-100 shadow-sm">
-                <span class="text-sm font-extrabold text-blue-700" id="progress-text">第 1 / 25 題</span>
+                <span class="text-sm font-extrabold text-blue-700" id="progress-text">第 1 / 20 題</span>
             </div>
             
-            <div class="flex gap-3">
+            <div id="timers-wrapper" class="flex gap-3">
                 <div class="flex items-center gap-2 bg-red-50 px-4 py-2 rounded-lg border border-red-100 shadow-sm">
                     <span class="text-sm font-bold text-red-600" id="q-timer-display">⏳ 本題: 02:00</span>
                 </div>
@@ -96,10 +93,14 @@ i<!DOCTYPE html>
         </div>
         
         <div class="w-full bg-slate-100 rounded-full h-2.5 mb-8 shadow-inner overflow-hidden">
-            <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-2.5 rounded-full transition-all duration-500 ease-out" style="width: 4%"></div>
+            <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-2.5 rounded-full transition-all duration-500 ease-out" style="width: 5%"></div>
         </div>
 
-        <h2 id="question-text" class="text-xl md:text-2xl font-bold mb-8 leading-relaxed text-slate-800">題目載入中...</h2>
+        <h2 id="question-text" class="text-xl md:text-2xl font-bold mb-4 leading-relaxed text-slate-800">題目載入中...</h2>
+        
+        <div id="question-image-container" class="hidden w-full mb-8 text-center rounded-xl overflow-hidden shadow-sm border border-slate-200 bg-white p-2">
+            <img id="question-image" src="" alt="題目圖片" class="max-w-full h-auto mx-auto max-h-64 object-contain">
+        </div>
         
         <div id="options-container" class="space-y-4 mb-8"></div>
 
@@ -110,7 +111,7 @@ i<!DOCTYPE html>
         </button>
     </div>
 
-    <div id="result-screen" class="hidden glass-card p-10 rounded-3xl w-full max-w-md text-center transition-all duration-500">
+    <div id="result-screen" class="hidden glass-card p-10 rounded-3xl w-full max-w-md text-center transition-all duration-500 mt-8">
         <div class="inline-block p-4 rounded-full bg-green-50 mb-4 shadow-inner">
             <span class="text-5xl">🏆</span>
         </div>
@@ -139,61 +140,105 @@ i<!DOCTYPE html>
     </div>
 
 <script>
-    // ⚠️ 提醒：這裡要記得換回您真實的 Google Form URL 與 Entry ID！
-    const formUrl = "https://docs.google.com/forms/d/e/您新表單的專屬ID/formResponse";
-    const entryDealer = "entry.1111111"; 
-    const entryName = "entry.2222222";   
-    const entryScore = "entry.3333333";  
-    const entryDetails = "entry.4444444"; 
+    // ============================================================
+    // ★★★ 測試/正式模式開關 ★★★
+    // 正式考試前，把下面兩個改成 true 即可恢復日期限制與計時器
+    // ============================================================
+    const ENABLE_EXAM_WINDOW = false;   // 是否檢查考試開放時間
+    const ENABLE_TIMERS = false;        // 是否啟用總時間/每題倒數計時
+    const EXAM_START = new Date('2026-07-22T12:30:00+08:00');
+    const EXAM_END   = new Date('2026-07-22T13:30:00+08:00');
+    // ============================================================
 
-    const quizData = [
-        { q: "在 DiagBox Record 應用中，若選擇「個性化參數測量」，單次最多可以讀取幾個參數？", a: ["5個", "10個", "15個", "無限制"], c: 1 },
-        { q: "關於 DiagBox 診斷儀的「標準參數測量」功能，下列敘述何者正確？", a: ["可以跨電腦同時監控多個單元", "可以讀取個別單元的所有參數", "無法顯示任何參數解釋", "單次最多只能讀取十個參數"], c: 1 },
-        { q: "在進行 DiagBox JDD 分析前，若在監控過程中未按下哪個按鈕，將會導致監控數據完全遺失？", a: ["圖表顯示", "故障日誌", "標準參數測量", "清除故障碼"], c: 1 },
-        { q: "DiagBox 所產出的 JDD 檔案，需要匯入試算表進行詳細分析時，其原始檔案格式為何？", a: ["PDF", "CSV", "DOCX", "XML"], c: 1 },
-        { q: "使用 RECORD 功能時，單次最多可以紀錄幾筆資料？", a: ["1筆", "5筆", "10筆", "無上限"], c: 2 },
-        { q: "冷氣系統更換管路元件後，為什麼必須執行抽真空的程序？", a: ["為了測試冷氣壓縮機的最高壓力", "排除空氣以避免高壓異常，並抽離水分防止冰堵與酸化", "僅為了將舊的冷凍油完全吸出", "為了讓新冷媒能產生更高的沸點"], c: 1 },
-        { q: "在冷氣管路執行高壓液態循環清洗後，必須強制更換下列哪個零件？", a: ["冷氣壓縮機", "蒸發器", "乾燥瓶 / 乾燥包", "膨脹閥"], c: 2 },
-        { q: "冷氣系統清洗完畢並更換乾燥瓶後，建議延長深度抽真空 (Deep Vacuum) 程序的實務時間為多久？", a: ["5到10分鐘", "15到30分鐘", "45到60分鐘", "至少120分鐘"], c: 2 },
-        { q: "客戶反映 Giulia 車輛上鎖時方向燈呈現「快閃」狀態，且上鎖提示音不同以往。這通常代表系統偵測到什麼問題？", a: ["偵測到防盜系統本身異常", "偵測到車門狀態異常", "偵測到非法的車內入侵", "車內中控系統被誤觸"], c: 1 },
-        { q: "在使用 WiTECH 系統提交診斷報告時，原廠建議建立哪種語言的檔案，以避免後續 L1 升級 L2 時引發客訴風險？", a: ["僅建立英文原文報告", "僅建立中文翻譯報告", "中英文同時建檔", "建立中、英,法三種語言"], c: 2 },
-        { q: "在引擎運作參數中，「退點火」(Retard) 的防禦性任務主要目的是什麼？", a: ["為了讓氣缸壓力達到最大峰值以提升馬力", "降低排氣溫度並改善油耗", "當偵測到爆震異常或溫度過高時，強行延後點火以保護硬體", "幫助觸媒轉化器快速冷卻"], c: 2 },
-        { q: "在 Alfa Romeo 的儀表燈號設計邏輯中，「黃色」燈號代表什麼等級的訊息？", a: ["停駛", "警戒", "作動", "輔助"], c: 1 },
-        { q: "承上題，Alfa Romeo 儀表中的「藍色」燈號代表什麼含意？", a: ["停駛", "警戒", "作動", "輔助"], c: 3 },
-        { q: "依據原廠規範，Alfa Romeo 引擎機油的「最大正常損耗量」標準為多少？", a: ["100 克 / 每千公里", "250 克 / 每千公里", "400 克 / 每千公里", "1000 克 / 每千公里"], c: 2 },
-        { q: "車輛螢幕上的電子機油量尺共有 6 格，請問每 1 格對應的機油量約為多少？", a: ["100 毫升", "250 毫升", "400 毫升", "500 毫升"], c: 1 },
-        { q: "要獲得最準確的電子機油油位量測結果，必須在引擎溫熱(約90°C)並熄火後，等待多久時間再進行量測？", a: ["馬上量測", "5 分鐘", "30 分鐘", "完全冷車隔夜"], c: 1 },
-        { q: "當儀表板亮起「機油劣化更換提醒 (Engine Oil Change Required)」燈號時，車輛絕對不可再超過行駛多少公里，否則將導致保固失效？", a: ["0 公里 (需立即原地拖車)", "500 公里", "1000 公里", "只要定時補機油就無里程限制"], c: 1 },
-        { q: "當儀表持續亮起 GPF (汽油微粒過濾器) 系統清潔進行中的燈號時，建議駕駛將車速保持在多少以上以配合系統再生？", a: ["30 km/h", "60 km/h", "100 km/h", "怠速原地靜置"], c: 1 },
-        { q: "相較於僅具備縱向控制的 ACC 系統，HAS (高速公路輔助系統) 多結合了哪種控制邏輯？", a: ["橫向控制 (車道置中邏輯)", "懸吊高度控制", "自動變換車道超車", "遠端遙控停車"], c: 0 },
-        { q: "當車輛儀表板上的 GPF (汽油微粒過濾器) 燈號與「警告燈」同步亮起時，代表什麼狀況？", a: ["微粒累積達到極限，需連續高速行駛燒結", "系統已發生故障無法自行再生，需回廠檢修", "正常現象，代表目前正在高溫清潔中", "需立即補充柴油/汽油微粒添加劑"], c: 1 }, 
-        { q: "將 DiagBox 產出的 JDD 匯入試算表 (CSV) 後，若想快速分析車輛進場前幾天的故障情況，第一步最推薦的操作是什麼？", a: ["針對日期欄位進行排序 (A 到 Z)", "將所有故障碼轉換為圖表", "刪除所有空白的欄位", "重新計算所有參數的平均值"], c: 0 }, 
-        { q: "在執行 DiagBox Record 功能時，若車輛處於 IG OFF (點火開關關閉) 的休眠狀態，系統是否能持續進行數據紀錄？", a: ["可以，系統會自動喚醒", "可以，只要不拔除 VCI 接頭即可", "不可以，IG OFF 時無法紀錄", "可以，但僅限紀錄電壓數據"], c: 2 }, 
-        { q: "若要開啟並檢視本機內所有儲存的 DiagBox Record 內部詳細紀錄與圖表資料，技師必須在桌面上開啟哪一個專屬應用程式？", a: ["Service Box", "DiagBox MRI", "WiTECH 2.0", "JDD Analyzer"], c: 1 }, 
-        { q: "在冷氣系統維修中執行「真空衰減測試」測漏時，標準作法是將系統抽至深真空後，靜置觀察約多長時間以確認壓力錶指針是否回升？", a: ["1 到 3 分鐘", "10 到 15 分鐘", "30 到 45 分鐘", "60 分鐘以上"], c: 1 }, 
-        { q: "當儀表出現黃色燈號「Service Adaptive Cruise Control (ACC) System」時，這通常代表系統發生了什麼狀況？", a: ["前方攝影機被大雨或濃霧遮蔽", "前保險桿雷達表面積聚泥沙", "ACC 系統偵測到內部硬體或通訊故障，系統已自動鎖死", "車輛行駛速度低於 30 km/h"], c: 2 } 
+    const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdW3oIpSau1xJAelNluZmTRyJ5jMIGX-g3ifDsv3lCa5unndw/formResponse";
+    const entryDealer = "entry.721790582";   // 經銷商
+    const entryName = "entry.552747713";     // 姓名
+    const entryScore = "entry.1284496205";   // 分數
+    const entryDetails = "entry.1557754387"; // 答題詳情
+
+    // ★ 50 題完整技術題庫 ★
+    const allQuizData = [
+        /* DiagBox & 軟體操作 (10題) */
+        { q: "在 DiagBox Record 中，若選擇「個性化參數測量」，單次最多可以讀取幾個參數？", a: ["5個", "10個", "15個", "無限制"], c: 1 },
+        { q: "個性化參數測量是否允許「跨電腦」讀取訊號？", a: ["可以，沒有任何限制", "可以，但只能跨引擎與變速箱", "不可以，無法跨電腦監控", "需視車輛年份而定"], c: 2 },
+        { q: "關於「標準參數測量」的敘述，下列何者正確？", a: ["可跨模組讀取", "單次最多讀取10個", "可讀取該單元所有參數", "不會顯示參數解釋"], c: 2 },
+        { q: "在進行 JDD 分析前，紀錄數據後若未按下哪個按鈕，監控數據將會完全遺失？", a: ["儲存 Trace", "故障日誌", "圖表顯示", "匯出 CSV"], c: 1 },
+        { q: "DiagBox 產出的 JDD 檔案，會以什麼格式供技師匯入試算表分析？", a: ["PDF", "TXT", "XML", "CSV"], c: 3 },
+        { q: "匯入 JDD 試算表後，想分析進場前幾天的故障情形，建議的第一步排版動作為何？", a: ["隱藏全部空白欄位", "對日期欄位進行排序 (A 到 Z)", "繪製電壓折線圖", "將英文字體全數轉為中文"], c: 1 },
+        { q: "若車輛處於 IG OFF (點火開關關閉) 狀態，DiagBox Record 功能是否能持續紀錄數據？", a: ["可以，只要不斷電", "可以，限定記錄10筆", "不可以，無法紀錄", "可以，但僅限低壓模組"], c: 2 },
+        { q: "若要開啟本機內所有儲存的 Record 詳細圖表，必須使用桌面的哪一個應用程式？", a: ["Witech 2.0", "Service Box", "DiagBox MRI", "JDD Analyzer"], c: 2 },
+        { q: "使用 RECORD 功能時，單次最多可以紀錄幾筆資料？", a: ["1筆", "5筆", "10筆", "20筆"], c: 2 },
+        { q: "在 MRI 軟體中觀看波形圖表時，若畫面全滿 (全綠)，技師應特別注意什麼以正確判讀？", a: ["右側的 Y 軸單位", "左下角的車身碼", "波形的波峰與波谷差值", "背景的 X 軸時間戳記"], c: 0 },
+        
+        /* 冷氣系統維護 (7題) */
+        { q: "冷氣管路更換後，抽真空的主要「物理目的」之一，是為了排除空氣以避免什麼狀況？", a: ["避免系統產生高壓異常", "避免冷媒沸點過低", "避免冷凍油流失", "避免壓縮機空轉"], c: 0 },
+        { q: "抽真空能讓管路內的液態水發生什麼變化以利抽出？", a: ["降低凝固點變冰", "降低沸點使其在常溫下沸騰化為蒸氣", "與冷凍油乳化結合", "增加表面張力"], c: 1 },
+        { q: "管路內若殘留水分，遇到低溫的膨脹閥時容易造成什麼現象？", a: ["酸堵", "氣堵", "冰堵", "油堵"], c: 2 },
+        { q: "水分與冷凍油及冷媒混合後，容易產生什麼破壞性物質？", a: ["碳酸鈣", "酸性物質", "高溫氣體", "石蠟沉積物"], c: 1 },
+        { q: "冷氣系統清洗完畢，建議將深度抽真空程序的實務時間延長至多久？", a: ["10-15分鐘", "20-30分鐘", "45-60分鐘", "120分鐘以上"], c: 2 },
+        { q: "執行「真空衰減測試」測漏時，系統抽至深真空後需靜置觀察多久看指針是否回升？", a: ["1-3分鐘", "10-15分鐘", "30分鐘以上", "完全不需要等待"], c: 1 },
+        { q: "在實務上，若需進行高壓測漏，通常會向管路內充填什麼氣體？", a: ["高壓氧氣", "高壓氮氣", "高壓氦氣", "純淨空氣"], c: 1 },
+
+        /* 引擎、變速箱與 MHEV (8題) */
+        { q: "EDCT6/MHEV車型故障碼「P2887 01 (電氣故障未特徵化)」指向哪一個零件異常？", a: ["啟動發電機", "駐車撥叉鎖定電磁閥", "離合器控制泵執行器", "電動機 MCU"], c: 1 },
+        { q: "承上題，當發生 P2887 01 故障時，車輛會有什麼明顯表徵？", a: ["僅純電模式無法啟動", "時速超過60km/h會頓挫", "無論是否點火引擎都無法啟動", "倒車時無動力"], c: 2 },
+        { q: "儀表顯示「變速箱故障/異常」且伴隨故障碼 P0C2A 97，指示需更換哪個零件？", a: ["駐車撥叉鎖定電磁閥", "換檔撥叉", "離合器控制泵執行器", "TBMU 電池模組"], c: 2 },
+        { q: "MHEV 車輛從四檔換到三檔時發出研磨聲/喀嚓聲，通常與哪一份 TSB 相關？", a: ["B2CW01F0Q0", "B2CW01ENQ0", "B2CW01ETQ0", "B2CW01EZQ0"], c: 2 },
+        { q: "在進行技術支援 (如 DID 申請) 時，第一步「必要」的動作是什麼？", a: ["更換相關 ECU", "填寫表單與發送 DID", "重灌 DiagBox", "向客戶報價"], c: 1 },
+        { q: "在引擎運作中，系統執行「退點火 (Retard)」的主要防禦目的是？", a: ["提升高轉速馬力", "降低油耗", "爆震或溫度異常時強行延後點火保護硬體", "加快熱車速度"], c: 2 },
+        { q: "DiagBox 紀錄波形中，水溫80度「怠速」狀態下，哪種感知器出現斷訊是正常的？", a: ["含氧感知器", "節氣門感知器", "高壓泵訊號", "爆震感知器"], c: 3 },
+        { q: "為什麼爆震感知器在正常怠速下會出現斷訊？", a: ["感知器硬體瑕疵", "因為怠速未產生強烈敲擊/爆震", "因為電腦主動切斷電源", "這是進入休眠模式的徵兆"], c: 1 },
+
+        /* 儀表燈號與機油規範 (15題) */
+        { q: "在 Alfa 儀表邏輯中，「黃色」燈號代表什麼含意？", a: ["作動", "警戒", "停駛", "輔助"], c: 1 },
+        { q: "在 Alfa 儀表邏輯中，「藍色」燈號代表什麼含意？", a: ["作動", "警戒", "停駛", "輔助"], c: 3 },
+        { q: "在 Alfa 儀表邏輯中，「紅色」燈號代表什麼含意？", a: ["作動", "警戒", "停駛/危險", "輔助"], c: 2 },
+        { q: "Alfa 原廠規範的引擎機油「最大正常損耗量」為多少？", a: ["100 克/每千公里", "250 克/每千公里", "400 克/每千公里", "1公升/每千公里"], c: 2 },
+        { q: "儀表板上的電子機油量尺，每 1 格代表多少毫升 (ml) 的機油？", a: ["100 ml", "250 ml", "400 ml", "500 ml"], c: 1 },
+        { q: "螢幕上的機油量尺總共有幾格？", a: ["4格", "5格", "6格", "8格"], c: 2 },
+        { q: "若儀表板直接亮起「機油油位低」的警告，建議儘快加注多少機油？", a: ["0.5 公升", "1 公升", "2 公升", "補滿至滿油位"], c: 1 },
+        { q: "量測電子機油油位時，引擎水溫應大約處於多少度？", a: ["30度", "60度", "90度 (溫熱)", "冷車狀態"], c: 2 },
+        { q: "到達工作溫度熄火後，需等待多久才能量測到最準確的機油油位？", a: ["立即量測", "5 分鐘", "30 分鐘", "隔夜"], c: 1 },
+        { q: "儀表亮起「機油劣化更換提醒」時，車輛極限不可行駛超過多少公里，以免引擎損毀？", a: ["100 公里", "300 公里", "500 公里", "1000 公里"], c: 2 },
+        { q: "GPF 燈號「持續亮起」且無警告燈，代表什麼？", a: ["GPF 永久損壞", "系統需補充添加劑", "系統正在進行微粒清潔(再生)，屬正常", "感知器斷線"], c: 2 },
+        { q: "為配合 GPF 再生，最佳的行駛車速應保持在多少以上？", a: ["30 km/h", "60 km/h", "90 km/h", "120 km/h"], c: 1 },
+        { q: "為配合 GPF 再生，最佳的引擎轉速應維持在多少以上？", a: ["1000 rpm", "1500 rpm", "2000 rpm", "3500 rpm"], c: 2 },
+        { q: "若 GPF 燈號與「警告燈」同步亮起，駕駛該如何應對？", a: ["繼續拉高轉速駕駛", "停車並原地點火", "儘速聯繫服務廠進行檢修，代表系統已故障", "無視並繼續行駛"], c: 2 },
+        { q: "Stelvio 儀表不定時顯示「維修報警器」且防盜燈亮，可能指向 BCM 的什麼故障碼？", a: ["P2887-01", "B1073-96", "P0C2A-97", "U1000-00"], c: 1 },
+
+        /* ADAS 系統與 Witech 防盜通訊 (10題) */
+        { q: "ACC (主動式車距調節巡航) 系統，主要負責哪個方向的車輛控制？", a: ["橫向控制 (左右)", "縱向控制 (前後)", "四輪獨立煞車控制", "垂直高度控制"], c: 1 },
+        { q: "HAS (高速公路輔助系統) 結合了 ACC 與什麼邏輯？", a: ["自動變換車道", "車道置中邏輯 (橫向控制)", "自動煞停入庫", "夜視行人偵測"], c: 1 },
+        { q: "客戶反映 Giulia 車輛上鎖時方向燈「快閃」且提示音異常，通常代表？", a: ["電池電量過低", "車門/引擎蓋未能確實關閉", "非法入侵警報", "鑰匙沒電"], c: 1 },
+        { q: "使用 Witech 系統建檔診斷報告時，原廠建議使用何種語言？", a: ["僅法文", "僅中文", "中英文同時建檔", "不需要文字，截圖即可"], c: 2 },
+        { q: "若 Witech 診斷僅建立中文報告，將案件升級至 L2 支援時容易發生什麼狀況？", a: ["系統自動翻譯", "原廠工程師無法判讀，需請客戶回廠補件，增加客訴風險", "檔案會被強制退回 L0", "無任何影響"], c: 1 },
+        { q: "相較於 Witech，DiagBox 產出的診斷資料會自動建立幾種語言？", a: ["1種", "2種", "3種", "5種"], c: 2 },
+        { q: "Witech 診斷系統中，若要查看故障發生當下的環境數值，可檢視什麼資料？", a: ["凍結資料/快照/事件資料", "車主手冊", "TSB 通報", "服務保養紀錄"], c: 0 },
+        { q: "在進行 Witech 診斷時，若遇到 L1 無法解決的問題，應向哪一級別尋求支援？", a: ["L0", "L2", "L3", "L4"], c: 1 },
+        { q: "Alfa 車系正常的上鎖作動，方向燈的反應應為？", a: ["常亮 5 秒", "快閃 3 次", "閃爍 1 次且伴隨正常提示音", "完全不亮"], c: 2 },
+        { q: "車輛進入休眠前，若在執行診斷紀錄，是否必須將「所有車門關閉」？", a: ["是，維持休眠狀態的標準規範", "否，開著門不會影響休眠", "僅需關閉駕駛座車門", "視電瓶電壓而定"], c: 0 }
     ];
 
+    // 系統變數狀態
     let state = {
         dealer: "", name: "", currentQ: 0, score: 0,
         logs: [], timer: 1800, interval: null, 
         qTimer: 120, qInterval: null,
-        isAnswered: false, inProgress: false 
+        isAnswered: false, inProgress: false,
+        selectedQuestions: [] // 存放抽出來考的題目
     };
 
-    let isFormSubmitted = false;
-
-    // 監聽 iframe 載入完成，代表資料已成功安全送達 Google 表單
-    document.getElementById('hidden_iframe').onload = function() {
-        if(isFormSubmitted) {
-            document.getElementById("quiz-screen").classList.add("hidden");
-            document.getElementById("result-screen").classList.remove("hidden");
-            document.getElementById("res-dealer").innerText = state.dealer;
-            document.getElementById("res-name").innerText = state.name;
-            document.getElementById("final-score").innerText = state.score;
+    // ★ 洗牌演算法 (Fisher-Yates) ★
+    function shuffleArray(array) {
+        let shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
         }
-    };
+        return shuffled;
+    }
 
+    // 攔截網頁關閉
     window.addEventListener("beforeunload", function (e) {
         if (state.inProgress) {
             e.preventDefault();
@@ -207,14 +252,17 @@ i<!DOCTYPE html>
         }
     });
 
-    
-        if (now < startTime) {
-            alert("測驗尚未開始！\n開放時間為：7/22 12:30 ~ 13:30");
-            return;
-        }
-        if (now > endTime) {
-            alert("測驗已結束！\n開放時間為：12/22 12:30 ~ 13:30");
-            return; 
+    function startExam() {
+        if (ENABLE_EXAM_WINDOW) {
+            const now = new Date();
+            if (now < EXAM_START) {
+                alert("測驗尚未開始！\n開放時間為：" + EXAM_START.toLocaleString('zh-TW') + " ~ " + EXAM_END.toLocaleString('zh-TW'));
+                return;
+            }
+            if (now > EXAM_END) {
+                alert("測驗已結束！\n開放時間為：" + EXAM_START.toLocaleString('zh-TW') + " ~ " + EXAM_END.toLocaleString('zh-TW'));
+                return; 
+            }
         }
 
         const d = document.getElementById("dealer-input").value.trim();
@@ -225,6 +273,30 @@ i<!DOCTYPE html>
         state.name = n;
         state.inProgress = true; 
 
+        // ==========================================
+        // ★ 核心抽題與洗牌邏輯 ★
+        // 1. 設定總題數為 20 題
+        // ==========================================
+        const TOTAL_QUESTIONS_TO_ASK = 20; 
+        
+        // 2. 先從 50 題題庫中，隨機抽出 20 題
+        let randomQuestions = shuffleArray(allQuizData).slice(0, TOTAL_QUESTIONS_TO_ASK);
+        
+        // 3. 把抽出來的每一題，選項 A, B, C, D 再次打亂
+        state.selectedQuestions = randomQuestions.map(q => {
+            let originalCorrectText = q.a[q.c]; 
+            let shuffledOptions = shuffleArray(q.a); 
+            let newCorrectIndex = shuffledOptions.indexOf(originalCorrectText); 
+            
+            return {
+                q: q.q,
+                a: shuffledOptions,
+                c: newCorrectIndex,
+                ...(q.img ? { img: q.img } : {})
+            };
+        });
+        // ==========================================
+        
         document.getElementById("login-screen").classList.add("opacity-0", "scale-95");
         setTimeout(() => {
             document.getElementById("login-screen").classList.add("hidden");
@@ -232,8 +304,12 @@ i<!DOCTYPE html>
             quiz.classList.remove("hidden");
             void quiz.offsetWidth;
             quiz.classList.remove("opacity-0", "scale-95");
-            
-            startGlobalTimer();
+
+            if (!ENABLE_TIMERS) {
+                document.getElementById("timers-wrapper").classList.add("hidden");
+            } else {
+                startGlobalTimer();
+            }
             loadQuestion();
         }, 300);
     }
@@ -256,6 +332,7 @@ i<!DOCTYPE html>
     }
 
     function startQuestionTimer() {
+        if (!ENABLE_TIMERS) return;
         clearInterval(state.qInterval);
         state.qTimer = 120; 
         updateQTimerDisplay();
@@ -288,7 +365,7 @@ i<!DOCTYPE html>
         if (state.isAnswered) return;
         state.isAnswered = true;
 
-        const qData = quizData[state.currentQ];
+        const qData = state.selectedQuestions[state.currentQ];
         const correctIndex = qData.c;
         const allBtns = document.querySelectorAll(".option-btn");
         const fbBox = document.getElementById("feedback-box");
@@ -310,13 +387,24 @@ i<!DOCTYPE html>
         document.getElementById("next-btn").classList.add("hidden");
         document.getElementById("feedback-box").classList.add("hidden");
         
-        // 💡 只清除單題計時器，確保總計時器 (state.interval) 不會被中斷
         clearInterval(state.qInterval);
         
-        const qData = quizData[state.currentQ];
-        document.getElementById("progress-text").innerText = `第 ${state.currentQ + 1} / ${quizData.length} 題`;
-        document.getElementById("progress-bar").style.width = `${((state.currentQ + 1) / quizData.length) * 100}%`;
+        const qData = state.selectedQuestions[state.currentQ];
+        const totalQ = state.selectedQuestions.length;
+        
+        document.getElementById("progress-text").innerText = `第 ${state.currentQ + 1} / ${totalQ} 題`;
+        document.getElementById("progress-bar").style.width = `${((state.currentQ + 1) / totalQ) * 100}%`;
         document.getElementById("question-text").innerText = `${state.currentQ + 1}. ${qData.q}`;
+
+        const imgContainer = document.getElementById("question-image-container");
+        const imgElement = document.getElementById("question-image");
+        if (qData.img) {
+            imgElement.src = qData.img;
+            imgContainer.classList.remove("hidden");
+        } else {
+            imgElement.src = "";
+            imgContainer.classList.add("hidden");
+        }
 
         const opts = document.getElementById("options-container");
         opts.innerHTML = "";
@@ -338,7 +426,7 @@ i<!DOCTYPE html>
         
         clearInterval(state.qInterval); 
 
-        const qData = quizData[state.currentQ];
+        const qData = state.selectedQuestions[state.currentQ];
         const correctIndex = qData.c;
         const allBtns = document.querySelectorAll(".option-btn");
         const fbBox = document.getElementById("feedback-box");
@@ -349,7 +437,10 @@ i<!DOCTYPE html>
         if (selectedIndex === correctIndex) {
             btnElement.classList.remove("opacity-50");
             btnElement.classList.add("correct-ans");
-            state.score += 4; 
+            
+            const pointsPerQ = 100 / state.selectedQuestions.length; 
+            state.score += pointsPerQ; 
+            
             logText = `Q${state.currentQ + 1}:[對] 技師選:${qData.a[selectedIndex]}`;
             fbBox.innerText = "✓ 答對了！";
             fbBox.className = "p-5 rounded-xl mb-6 font-bold text-center text-lg shadow-sm border border-green-200 bg-green-50 text-green-700 block";
@@ -369,12 +460,55 @@ i<!DOCTYPE html>
 
     function nextQuestion() {
         state.currentQ++;
-        if (state.currentQ < quizData.length) {
+        if (state.currentQ < state.selectedQuestions.length) {
             loadQuestion();
         } else {
             forceSubmit(false); 
         }
     }
 
-    // 🏆 核心提交引擎：改用實體 HTML 表單，無懼任何防火牆與 Safari 隱私限制
-    function forceSub
+    function forceSubmit(isAborted) {
+        if (!state.inProgress) return; 
+        state.inProgress = false; 
+        clearInterval(state.interval); 
+        clearInterval(state.qInterval); 
+
+        let finalLogs = [...state.logs];
+
+        if (isAborted) {
+            finalLogs.push("【嚴重警告：技師於此題強行關閉網頁或返回上一頁，疑似作弊】");
+        } else {
+            while (state.currentQ < state.selectedQuestions.length) {
+                if(!state.isAnswered){
+                     const qData = state.selectedQuestions[state.currentQ];
+                     finalLogs.push(`Q${state.currentQ + 1}:[未答] 未作答 / 正解:${qData.a[qData.c]}`);
+                }
+                state.currentQ++;
+                state.isAnswered = false;
+            }
+        }
+
+        const params = new URLSearchParams();
+        params.append(entryDealer, state.dealer);
+        params.append(entryName, state.name);
+        params.append(entryScore, Math.round(state.score).toString());
+        params.append(entryDetails, finalLogs.join(" | "));
+
+        fetch(formUrl, {
+            method: "POST", mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: params.toString(),
+            keepalive: true 
+        }).catch(err => console.log(err));
+
+        if (!isAborted) {
+            document.getElementById("quiz-screen").classList.add("hidden");
+            document.getElementById("result-screen").classList.remove("hidden");
+            document.getElementById("res-dealer").innerText = state.dealer;
+            document.getElementById("res-name").innerText = state.name;
+            document.getElementById("final-score").innerText = Math.round(state.score);
+        }
+    }
+</script>
+</body>
+</html>
