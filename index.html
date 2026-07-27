@@ -43,15 +43,6 @@
 </head>
 <body class="bg-gradient-to-br from-slate-100 to-blue-50 text-slate-800 flex items-center justify-center min-h-screen p-4 selection:bg-blue-200">
 
-    <!-- ★★★ 終極防漏單引擎：隱藏 iframe 與實體 Form ★★★ -->
-    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
-    <form id="google-form" action="https://docs.google.com/forms/d/e/1FAIpQLSftyWqZ8Q8tkYGA6bQeSnP2nxZldQoPt2gH7mSXczpfnNloaA/formResponse" method="POST" target="hidden_iframe" style="display:none;">
-        <input type="text" name="entry.1741632433" id="gf-dealer">
-        <input type="text" name="entry.1735160920" id="gf-name">
-        <input type="text" name="entry.609819735" id="gf-score">
-        <input type="text" name="entry.1154807191" id="gf-details">
-    </form>
-
     <!-- 測試模式提示條 -->
     <div id="test-banner" class="fixed top-0 left-0 w-full bg-amber-400 text-amber-900 text-center text-sm font-bold py-1.5 z-50 shadow hidden">
         ⚠️ 目前為【測試模式】：日期限制與計時器皆已關閉，正式考試前請記得改回來
@@ -234,19 +225,6 @@
         selectedQuestions: [] 
     };
 
-    let isFormSubmitted = false;
-
-    // ★ 監聽 iframe 載入完成，代表資料已安全送達 Google 表單 ★
-    document.getElementById('hidden_iframe').onload = function() {
-        if(isFormSubmitted) {
-            document.getElementById("quiz-screen").classList.add("hidden");
-            document.getElementById("result-screen").classList.remove("hidden");
-            document.getElementById("res-dealer").innerText = state.dealer;
-            document.getElementById("res-name").innerText = state.name;
-            document.getElementById("final-score").innerText = Math.round(state.score);
-        }
-    };
-
     function shuffleArray(array) {
         let shuffled = [...array];
         for (let i = shuffled.length - 1; i > 0; i--) {
@@ -290,7 +268,6 @@
         state.name = n;
         state.inProgress = true; 
 
-        // ★ 核心抽題與洗牌邏輯 ★
         const TOTAL_QUESTIONS_TO_ASK = 20; 
         let randomQuestions = shuffleArray(allQuizData).slice(0, TOTAL_QUESTIONS_TO_ASK);
         
@@ -477,7 +454,7 @@
         }
     }
 
-    // ★★★ 核心提交引擎：改用實體 HTML 表單，無懼任何防火牆與 Safari 限制 ★★★
+    // ★★★ 回歸最穩定且您昨天測試成功的 fetch 傳輸法 ★★★
     function forceSubmit(isAborted) {
         if (!state.inProgress) return; 
         state.inProgress = false; 
@@ -499,15 +476,28 @@
             }
         }
 
-        // 將資料填入隱藏的表單
-        document.getElementById("gf-dealer").value = state.dealer;
-        document.getElementById("gf-name").value = state.name;
-        document.getElementById("gf-score").value = Math.round(state.score).toString();
-        document.getElementById("gf-details").value = finalLogs.join(" | ");
+        // 寫入您真實的 Form ID 與欄位對應
+        const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSftyWqZ8Q8tkYGA6bQeSnP2nxZldQoPt2gH7mSXczpfnNloaA/formResponse";
+        const params = new URLSearchParams();
+        params.append("entry.1741632433", state.dealer);
+        params.append("entry.1735160920", state.name);
+        params.append("entry.609819735", Math.round(state.score).toString());
+        params.append("entry.1154807191", finalLogs.join(" | "));
 
-        // 標記狀態並發射實體表單
-        isFormSubmitted = true;
-        document.getElementById("google-form").submit();
+        // 發送資料到 Google
+        fetch(formUrl, {
+            method: "POST", 
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: params.toString()
+        }).catch(err => console.log("傳送失敗:", err));
+
+        // 無論發送成功與否，立刻切換至結果畫面
+        document.getElementById("quiz-screen").classList.add("hidden");
+        document.getElementById("result-screen").classList.remove("hidden");
+        document.getElementById("res-dealer").innerText = state.dealer;
+        document.getElementById("res-name").innerText = state.name;
+        document.getElementById("final-score").innerText = Math.round(state.score);
     }
 </script>
 </body>
