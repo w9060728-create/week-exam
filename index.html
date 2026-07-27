@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>技術評核系統 - DIAGBOX 與 Stellantis 技術測驗（測試版）</title>
+    <title>技術評核系統 - DIAGBOX 與 Stellantis 技術測驗</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { 
@@ -43,10 +43,18 @@
 </head>
 <body class="bg-gradient-to-br from-slate-100 to-blue-50 text-slate-800 flex items-center justify-center min-h-screen p-4 selection:bg-blue-200">
 
-    <!-- ★★★★★ 測試模式提示條 ★★★★★
-         上線前記得回來把下面 CONFIG 區塊的 ENABLE_TIMERS / ENABLE_EXAM_WINDOW 改回 true -->
-    <div class="fixed top-0 left-0 w-full bg-amber-400 text-amber-900 text-center text-sm font-bold py-1.5 z-50 shadow">
-        ⚠️ 目前為【測試模式】：日期限制與計時器皆已關閉，僅供內部測試，正式考試前請記得改回來
+    <!-- ★★★ 終極防漏單引擎：隱藏 iframe 與實體 Form ★★★ -->
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+    <form id="google-form" action="https://docs.google.com/forms/d/e/1FAIpQLSdW3oIpSau1xJAelNluZmTRyJ5jMIGX-g3ifDsv3lCa5unndw/formResponse" method="POST" target="hidden_iframe" style="display:none;">
+        <input type="text" name="entry.721790582" id="gf-dealer">
+        <input type="text" name="entry.552747713" id="gf-name">
+        <input type="text" name="entry.1284496205" id="gf-score">
+        <input type="text" name="entry.1557754387" id="gf-details">
+    </form>
+
+    <!-- 測試模式提示條 -->
+    <div id="test-banner" class="fixed top-0 left-0 w-full bg-amber-400 text-amber-900 text-center text-sm font-bold py-1.5 z-50 shadow hidden">
+        ⚠️ 目前為【測試模式】：日期限制與計時器皆已關閉，正式考試前請記得改回來
     </div>
 
     <div id="login-screen" class="glass-card p-10 rounded-3xl w-full max-w-md transition-all duration-500 mt-8">
@@ -148,6 +156,11 @@
     const ENABLE_TIMERS = false;        // 是否啟用總時間/每題倒數計時
     const EXAM_START = new Date('2026-07-22T12:30:00+08:00');
     const EXAM_END   = new Date('2026-07-22T13:30:00+08:00');
+    
+    // 若為測試模式，顯示頂部提示條
+    if(!ENABLE_EXAM_WINDOW || !ENABLE_TIMERS) {
+        document.getElementById('test-banner').classList.remove('hidden');
+    }
     // ============================================================
 
     const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdW3oIpSau1xJAelNluZmTRyJ5jMIGX-g3ifDsv3lCa5unndw/formResponse";
@@ -219,16 +232,27 @@
         { q: "車輛進入休眠前，若在執行診斷紀錄，是否必須將「所有車門關閉」？", a: ["是，維持休眠狀態的標準規範", "否，開著門不會影響休眠", "僅需關閉駕駛座車門", "視電瓶電壓而定"], c: 0 }
     ];
 
-    // 系統變數狀態
     let state = {
         dealer: "", name: "", currentQ: 0, score: 0,
         logs: [], timer: 1800, interval: null, 
         qTimer: 120, qInterval: null,
         isAnswered: false, inProgress: false,
-        selectedQuestions: [] // 存放抽出來考的題目
+        selectedQuestions: [] 
     };
 
-    // ★ 洗牌演算法 (Fisher-Yates) ★
+    let isFormSubmitted = false;
+
+    // ★ 監聽 iframe 載入完成，代表資料已安全送達 Google 表單 ★
+    document.getElementById('hidden_iframe').onload = function() {
+        if(isFormSubmitted) {
+            document.getElementById("quiz-screen").classList.add("hidden");
+            document.getElementById("result-screen").classList.remove("hidden");
+            document.getElementById("res-dealer").innerText = state.dealer;
+            document.getElementById("res-name").innerText = state.name;
+            document.getElementById("final-score").innerText = Math.round(state.score);
+        }
+    };
+
     function shuffleArray(array) {
         let shuffled = [...array];
         for (let i = shuffled.length - 1; i > 0; i--) {
@@ -238,7 +262,6 @@
         return shuffled;
     }
 
-    // 攔截網頁關閉
     window.addEventListener("beforeunload", function (e) {
         if (state.inProgress) {
             e.preventDefault();
@@ -273,16 +296,10 @@
         state.name = n;
         state.inProgress = true; 
 
-        // ==========================================
         // ★ 核心抽題與洗牌邏輯 ★
-        // 1. 設定總題數為 20 題
-        // ==========================================
         const TOTAL_QUESTIONS_TO_ASK = 20; 
-        
-        // 2. 先從 50 題題庫中，隨機抽出 20 題
         let randomQuestions = shuffleArray(allQuizData).slice(0, TOTAL_QUESTIONS_TO_ASK);
         
-        // 3. 把抽出來的每一題，選項 A, B, C, D 再次打亂
         state.selectedQuestions = randomQuestions.map(q => {
             let originalCorrectText = q.a[q.c]; 
             let shuffledOptions = shuffleArray(q.a); 
@@ -295,7 +312,6 @@
                 ...(q.img ? { img: q.img } : {})
             };
         });
-        // ==========================================
         
         document.getElementById("login-screen").classList.add("opacity-0", "scale-95");
         setTimeout(() => {
@@ -467,6 +483,7 @@
         }
     }
 
+    // ★★★ 核心提交引擎：改用實體 HTML 表單，無懼任何防火牆與 Safari 限制 ★★★
     function forceSubmit(isAborted) {
         if (!state.inProgress) return; 
         state.inProgress = false; 
@@ -488,26 +505,15 @@
             }
         }
 
-        const params = new URLSearchParams();
-        params.append(entryDealer, state.dealer);
-        params.append(entryName, state.name);
-        params.append(entryScore, Math.round(state.score).toString());
-        params.append(entryDetails, finalLogs.join(" | "));
+        // 將資料填入隱藏的表單
+        document.getElementById("gf-dealer").value = state.dealer;
+        document.getElementById("gf-name").value = state.name;
+        document.getElementById("gf-score").value = Math.round(state.score).toString();
+        document.getElementById("gf-details").value = finalLogs.join(" | ");
 
-        fetch(formUrl, {
-            method: "POST", mode: "no-cors",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: params.toString(),
-            keepalive: true 
-        }).catch(err => console.log(err));
-
-        if (!isAborted) {
-            document.getElementById("quiz-screen").classList.add("hidden");
-            document.getElementById("result-screen").classList.remove("hidden");
-            document.getElementById("res-dealer").innerText = state.dealer;
-            document.getElementById("res-name").innerText = state.name;
-            document.getElementById("final-score").innerText = Math.round(state.score);
-        }
+        // 標記狀態並發射實體表單
+        isFormSubmitted = true;
+        document.getElementById("google-form").submit();
     }
 </script>
 </body>
