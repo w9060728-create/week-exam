@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>技術評核系統 - DIAGBOX 與 Stellantis 技術測驗</title>
+    <title>技術評核系統 - 專業能力測驗</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { 
@@ -18,19 +18,15 @@
             border: 1px solid rgba(255, 255, 255, 0.5);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
         }
-        .correct-ans { 
-            background-color: #ecfdf5 !important; 
-            border-color: #10b981 !important; 
-            color: #047857 !important; 
-            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1) !important;
+        /* 盲測模式專用：選中後統一顯示為藍色，絕對不提示對錯 */
+        .selected-ans { 
+            background-color: #eff6ff !important; 
+            border-color: #3b82f6 !important; 
+            color: #1e3a8a !important; 
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1) !important;
             transform: scale(1.01);
         }
-        .wrong-ans { 
-            background-color: #fef2f2 !important; 
-            border-color: #ef4444 !important; 
-            color: #b91c1c !important; 
-        }
-        .disabled-btn { pointer-events: none; opacity: 0.7; }
+        .disabled-btn { pointer-events: none; opacity: 0.6; }
         .blink-red { animation: blinker 1s linear infinite; color: #ef4444; font-weight: bold; }
         @keyframes blinker { 50% { opacity: 0; } }
         
@@ -54,7 +50,7 @@
                 <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
             </span>
             <h1 class="text-3xl font-extrabold text-gradient bg-gradient-to-r from-blue-700 to-cyan-600 tracking-tight">技術評核系統</h1>
-            <p class="text-sm text-slate-500 mt-2 font-medium">Stellantis 專業診斷技術測驗</p>
+            <p class="text-sm text-slate-500 mt-2 font-medium">Stellantis 專業能力測驗 (共35題)</p>
         </div>
         
         <div class="space-y-5">
@@ -69,7 +65,7 @@
             </div>
 
             <button onclick="startExam()" class="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 text-lg tracking-wide mt-4">
-                開始隨機抽題測驗
+                進入評核測驗
             </button>
         </div>
     </div>
@@ -78,21 +74,18 @@
         
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div class="bg-blue-50 px-4 py-2 rounded-lg border border-blue-100 shadow-sm">
-                <span class="text-sm font-extrabold text-blue-700" id="progress-text">第 1 / 20 題</span>
+                <span class="text-sm font-extrabold text-blue-700" id="progress-text">第 1 / 35 題</span>
             </div>
             
             <div id="timers-wrapper" class="flex gap-3">
                 <div class="flex items-center gap-2 bg-red-50 px-4 py-2 rounded-lg border border-red-100 shadow-sm">
                     <span class="text-sm font-bold text-red-600" id="q-timer-display">⏳ 本題: 02:00</span>
                 </div>
-                <div class="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
-                    <span class="text-sm font-bold text-slate-700" id="timer-display">⏱️ 總時: 30:00</span>
-                </div>
             </div>
         </div>
         
         <div class="w-full bg-slate-100 rounded-full h-2.5 mb-8 shadow-inner overflow-hidden">
-            <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-2.5 rounded-full transition-all duration-500 ease-out" style="width: 5%"></div>
+            <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-2.5 rounded-full transition-all duration-500 ease-out" style="width: 2%"></div>
         </div>
 
         <h2 id="question-text" class="text-xl md:text-2xl font-bold mb-4 leading-relaxed text-slate-800">題目載入中...</h2>
@@ -110,19 +103,17 @@
         </button>
     </div>
 
+    <!-- 盲測專用：絕對不顯示分數與等級的結果畫面 -->
     <div id="result-screen" class="hidden glass-card p-10 rounded-3xl w-full max-w-md text-center transition-all duration-500 mt-8">
-        <div class="inline-block p-4 rounded-full bg-green-50 mb-4 shadow-inner">
-            <span class="text-5xl">🏆</span>
+        <div class="inline-block p-4 rounded-full bg-green-50 mb-6 shadow-inner">
+            <span class="text-5xl">✅</span>
         </div>
-        <h2 class="text-2xl font-extrabold text-slate-800 mb-2">評核完成</h2>
-        <p class="text-slate-500 font-medium mb-6">感謝您的參與，以下是您的測驗結果</p>
-        
-        <div class="bg-gradient-to-br from-blue-50 to-cyan-50 p-6 rounded-2xl border border-blue-100 mb-8 shadow-inner">
-            <div class="text-sm text-blue-600 font-bold mb-1">總得分</div>
-            <div id="final-score" class="text-7xl font-black text-gradient bg-gradient-to-r from-blue-600 to-cyan-600"></div>
-        </div>
+        <h2 class="text-2xl font-extrabold text-slate-800 mb-4">測驗已結束</h2>
+        <p class="text-slate-500 font-medium mb-8 leading-relaxed">
+            感謝您的參與！<br>您的作答紀錄已安全傳送至總部後台進行評核。
+        </p>
 
-        <div class="bg-white p-5 rounded-xl border border-slate-100 text-left text-sm text-slate-600 font-medium leading-relaxed shadow-sm space-y-2">
+        <div class="bg-white p-5 rounded-xl border border-slate-100 text-left text-sm text-slate-600 font-medium leading-relaxed shadow-sm space-y-3">
             <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-blue-500"></span>
                 <span>經銷商：<span id="res-dealer" class="font-bold text-slate-800"></span></span>
@@ -133,7 +124,7 @@
             </div>
             <div class="flex items-center gap-2 mt-4 pt-3 border-t border-slate-100">
                 <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                <span class="text-green-600">成績與答題詳情已安全同步至總部</span>
+                <span class="text-green-600">系統資料同步完成，您可以關閉此網頁。</span>
             </div>
         </div>
     </div>
@@ -141,88 +132,208 @@
 <script>
     // ============================================================
     // ★★★ 測試/正式模式開關 ★★★
-    // 正式考試前，把下面兩個改成 true 即可恢復日期限制與計時器
     // ============================================================
-    const ENABLE_EXAM_WINDOW = false;   // 是否檢查考試開放時間
-    const ENABLE_TIMERS = false;        // 是否啟用總時間/每題倒數計時
+    const ENABLE_EXAM_WINDOW = false;   
+    const ENABLE_TIMERS = false;        
     const EXAM_START = new Date('2026-07-22T12:30:00+08:00');
     const EXAM_END   = new Date('2026-07-22T13:30:00+08:00');
     
-    // 若為測試模式，顯示頂部提示條
     if(!ENABLE_EXAM_WINDOW || !ENABLE_TIMERS) {
         document.getElementById('test-banner').classList.remove('hidden');
     }
     // ============================================================
 
-    // ★ 50 題完整技術題庫 ★
+    // ★ 150 題 綜合技術題庫 (Level 1 ~ 5) ★
     const allQuizData = [
-        /* DiagBox & 軟體操作 (10題) */
-        { q: "在 DiagBox Record 中，若選擇「個性化參數測量」，單次最多可以讀取幾個參數？", a: ["5個", "10個", "15個", "無限制"], c: 1 },
-        { q: "個性化參數測量是否允許「跨電腦」讀取訊號？", a: ["可以，沒有任何限制", "可以，但只能跨引擎與變速箱", "不可以，無法跨電腦監控", "需視車輛年份而定"], c: 2 },
-        { q: "關於「標準參數測量」的敘述，下列何者正確？", a: ["可跨模組讀取", "單次最多讀取10個", "可讀取該單元所有參數", "不會顯示參數解釋"], c: 2 },
-        { q: "在進行 JDD 分析前，紀錄數據後若未按下哪個按鈕，監控數據將會完全遺失？", a: ["儲存 Trace", "故障日誌", "圖表顯示", "匯出 CSV"], c: 1 },
-        { q: "DiagBox 產出的 JDD 檔案，會以什麼格式供技師匯入試算表分析？", a: ["PDF", "TXT", "XML", "CSV"], c: 3 },
-        { q: "匯入 JDD 試算表後，想分析進場前幾天的故障情形，建議的第一步排版動作為何？", a: ["隱藏全部空白欄位", "對日期欄位進行排序 (A 到 Z)", "繪製電壓折線圖", "將英文字體全數轉為中文"], c: 1 },
-        { q: "若車輛處於 IG OFF (點火開關關閉) 狀態，DiagBox Record 功能是否能持續紀錄數據？", a: ["可以，只要不斷電", "可以，限定記錄10筆", "不可以，無法紀錄", "可以，但僅限低壓模組"], c: 2 },
-        { q: "若要開啟本機內所有儲存的 Record 詳細圖表，必須使用桌面的哪一個應用程式？", a: ["Witech 2.0", "Service Box", "DiagBox MRI", "JDD Analyzer"], c: 2 },
-        { q: "使用 RECORD 功能時，單次最多可以紀錄幾筆資料？", a: ["1筆", "5筆", "10筆", "20筆"], c: 2 },
-        { q: "在 MRI 軟體中觀看波形圖表時，若畫面全滿 (全綠)，技師應特別注意什麼以正確判讀？", a: ["右側的 Y 軸單位", "左下角的車身碼", "波形的波峰與波谷差值", "背景的 X 軸時間戳記"], c: 0 },
-        
-        /* 冷氣系統維護 (7題) */
-        { q: "冷氣管路更換後，抽真空的主要「物理目的」之一，是為了排除空氣以避免什麼狀況？", a: ["避免系統產生高壓異常", "避免冷媒沸點過低", "避免冷凍油流失", "避免壓縮機空轉"], c: 0 },
-        { q: "抽真空能讓管路內的液態水發生什麼變化以利抽出？", a: ["降低凝固點變冰", "降低沸點使其在常溫下沸騰化為蒸氣", "與冷凍油乳化結合", "增加表面張力"], c: 1 },
-        { q: "管路內若殘留水分，遇到低溫的膨脹閥時容易造成什麼現象？", a: ["酸堵", "氣堵", "冰堵", "油堵"], c: 2 },
-        { q: "水分與冷凍油及冷媒混合後，容易產生什麼破壞性物質？", a: ["碳酸鈣", "酸性物質", "高溫氣體", "石蠟沉積物"], c: 1 },
-        { q: "冷氣系統清洗完畢，建議將深度抽真空程序的實務時間延長至多久？", a: ["10-15分鐘", "20-30分鐘", "45-60分鐘", "120分鐘以上"], c: 2 },
-        { q: "執行「真空衰減測試」測漏時，系統抽至深真空後需靜置觀察多久看指針是否回升？", a: ["1-3分鐘", "10-15分鐘", "30分鐘以上", "完全不需要等待"], c: 1 },
-        { q: "在實務上，若需進行高壓測漏，通常會向管路內充填什麼氣體？", a: ["高壓氧氣", "高壓氮氣", "高壓氦氣", "純淨空氣"], c: 1 },
+        // ====== Level 1: 新手學徒 (基礎與常識) ======
+        { level: 1, q: "車輛進廠保養時，測量輪胎胎紋深度的法定最低安全標準為何？", a: ["0.8 mm", "1.6 mm", "2.0 mm", "3.0 mm"], c: 1 },
+        { level: 1, q: "使用電瓶測試儀檢查一般 12V 鉛酸電瓶時，健康的靜態電壓應大約落在哪個區間？", a: ["10.5V - 11.2V", "11.5V - 12.0V", "12.4V - 12.8V", "13.5V - 14.5V"], c: 2 },
+        { level: 1, q: "Peugeot PureTech 1.2 引擎在執行定期保養時，必須特別使用專用特工檢查哪一個零件的寬度？", a: ["發電機皮帶", "浸油式正時皮帶", "冷氣壓縮機皮帶", "水泵浦皮帶"], c: 1 },
+        { level: 1, q: "BlueHDi 柴油車型儀表亮起「Urea」燈號時，代表需要添加什麼？", a: ["柴油微粒添加劑 (DPF)", "AdBlue (環保尿素)", "引擎機油", "煞車油"], c: 1 },
+        { level: 1, q: "更換機油濾清器時，為避免漏油或拆卸困難，正確的安裝方式為何？", a: ["直接用氣動工具打緊", "在O型環上塗抹少許新機油後，依規定扭力或手轉逼緊", "不需要安裝O型環", "在螺牙上塗抹螺絲膠"], c: 1 },
+        { level: 1, q: "儀表板上亮起「紅色」的警告燈號，通常代表什麼意義？", a: ["輔助系統啟動", "系統警戒，建議盡快預約進廠", "危險或嚴重故障，應立即安全停駛並熄火", "保養時間已到"], c: 2 },
+        { level: 1, q: "檢查煞車油 (Brake Fluid) 是否劣化的主要指標是什麼？", a: ["油品含水量", "油品顏色深淺", "油品濃稠度", "油品氣味"], c: 0 },
+        { level: 1, q: "車輛頂升作業前，最關鍵的安全步驟是什麼？", a: ["開啟冷氣系統", "確認頂車機托臂精準對齊車輛底盤強化支撐點", "將方向盤打到底", "拔除電瓶負極"], c: 1 },
+        { level: 1, q: "雨刷水噴不出水，且聽不到噴水馬達運轉聲，最基礎的第一步檢查是什麼？", a: ["更換噴水馬達", "拆下前保險桿", "檢查雨刷水箱保險絲是否燒毀", "更換雨刷撥桿"], c: 2 },
+        { level: 1, q: "引擎冷卻液 (水箱精) 除了防凍與散熱外，還具備什麼重要功能？", a: ["增加引擎馬力", "防鏽防腐蝕與潤滑水泵浦", "提升冷氣壓縮機效率", "清潔引擎積碳"], c: 1 },
+        { level: 1, q: "Peugeot 3008/5008 的標準 OBD2 診斷接頭通常位於何處？", a: ["引擎室保險絲盒內", "副駕駛座手套箱下方", "駕駛座儀表台左下方或中控台下方飾蓋內", "後車廂備胎旁"], c: 2 },
+        { level: 1, q: "柴油引擎的 DPF 系統，其主要功能是什麼？", a: ["過濾引擎進氣雜質", "過濾排氣中的碳微粒 (黑煙)", "降低氮氧化物 (NOx)", "增加渦輪壓力"], c: 1 },
+        { level: 1, q: "汽油引擎的 GPF 系統，其主要功能是什麼？", a: ["過濾汽油雜質", "降低汽油引擎排氣微粒", "提升燃油壓力", "回收油箱油氣"], c: 1 },
+        { level: 1, q: "更換輪胎後，為了讓車輛電腦重新學習胎壓，必須執行什麼動作？", a: ["更換儀表板", "透過車內螢幕或按鍵執行 TPMS 胎壓初始化重置", "重新啟動引擎三次", "猛踩三次煞車"], c: 1 },
+        { level: 1, q: "檢查引擎空氣濾清器時，若發現濾芯嚴重髒污阻塞，會對車輛造成什麼直接影響？", a: ["冷氣不冷", "煞車變軟", "進氣量不足導致動力下降與油耗變差", "方向盤變重"], c: 2 },
+        { level: 1, q: "判斷煞車來令片是否需要更換的依據為何？", a: ["行駛里程數", "來令片摩擦材料的剩餘厚度", "煞車踏板的顏色", "輪胎胎壓"], c: 1 },
+        { level: 1, q: "啟動馬達 (Starter) 的基本功能是什麼？", a: ["提供全車電力", "在引擎發動前，帶動飛輪使引擎開始運轉", "控制方向機轉向", "冷卻引擎散熱排"], c: 1 },
+        { level: 1, q: "發電機 (Alternator) 在引擎運轉時的作用為何？", a: ["負責點火系統的高壓電", "將動能轉換為電能，為電瓶充電並供應全車用電", "控制電子方向機作動", "輔助引擎煞車"], c: 1 },
+        { level: 1, q: "儀表板亮起「黃色/橘色」的警告燈號，通常代表什麼意義？", a: ["危險，需立即拖車", "輔助功能開啟", "非緊急異常或警戒提醒，可小心行駛並安排檢修", "車門未關"], c: 2 },
+        { level: 1, q: "車輛進廠時，套上方向盤套、排檔套與座椅套的主要目的是？", a: ["為了美觀", "避免技師工作服上的油污弄髒客戶內裝", "防止靜電破壞電腦", "公司規定，無實質意義"], c: 1 },
+        { level: 1, q: "在 Alfa 儀表邏輯中，「黃色」燈號代表什麼含意？", a: ["作動", "警戒", "停駛", "輔助"], c: 1 },
+        { level: 1, q: "在 Alfa 儀表邏輯中，「藍色」燈號代表什麼含意？", a: ["作動", "警戒", "停駛", "輔助"], c: 3 },
+        { level: 1, q: "在 Alfa 儀表邏輯中，「紅色」燈號代表什麼含意？", a: ["作動", "警戒", "停駛/危險", "輔助"], c: 2 },
+        { level: 1, q: "使用活動扳手時,應以下列何者受力？", a: ["轉動邊", "固定邊", "螺紋", "活動邊"], c: 1 },
+        { level: 1, q: "拆裝螺絲時,應以下列何者列為最優先選擇使用？", a: ["開口扳手", "梅花扳手", "棘輪扳手", "活動扳手"], c: 1 },
+        { level: 1, q: "測量軸端間隙和齒隙的最好工具是？", a: ["游標卡尺", "間隙規", "內徑測微器", "測微指示錶(千分錶)"], c: 3 },
+        { level: 1, q: "扭力扳手的作用為何？", a: ["可用於拆卸螺絲", "專用於鎖緊螺絲", "可用於拆卸和鎖緊螺絲", "專用於拆卸一般扳手扭不動之螺絲"], c: 1 },
+        { level: 1, q: "測量車上保險絲是否燒毀斷路時,應使用電表的哪一個功能最為快速？", a: ["交流電壓檔", "導通測試檔 (蜂鳴檔) 或電阻檔", "溫度測試檔", "電容測試檔"], c: 1 },
+        { level: 1, q: "更換汽車發電機時應先拆卸哪一個部件？", a: ["電瓶負極線", "發電機固定螺桿", "發電機 B 接頭", "發電機L/S 接頭"], c: 0 },
+        { level: 1, q: "煞車油應多久更換一次最為標準？", a: ["3個月", "6個月", "1年", "5年"], c: 2 },
 
-        /* 引擎、變速箱與 MHEV (8題) */
-        { q: "EDCT6/MHEV車型故障碼「P2887 01 (電氣故障未特徵化)」指向哪一個零件異常？", a: ["啟動發電機", "駐車撥叉鎖定電磁閥", "離合器控制泵執行器", "電動機 MCU"], c: 1 },
-        { q: "承上題，當發生 P2887 01 故障時，車輛會有什麼明顯表徵？", a: ["僅純電模式無法啟動", "時速超過60km/h會頓挫", "無論是否點火引擎都無法啟動", "倒車時無動力"], c: 2 },
-        { q: "儀表顯示「變速箱故障/異常」且伴隨故障碼 P0C2A 97，指示需更換哪個零件？", a: ["駐車撥叉鎖定電磁閥", "換檔撥叉", "離合器控制泵執行器", "TBMU 電池模組"], c: 2 },
-        { q: "MHEV 車輛從四檔換到三檔時發出研磨聲/喀嚓聲，通常與哪一份 TSB 相關？", a: ["B2CW01F0Q0", "B2CW01ENQ0", "B2CW01ETQ0", "B2CW01EZQ0"], c: 2 },
-        { q: "在進行技術支援 (如 DID 申請) 時，第一步「必要」的動作是什麼？", a: ["更換相關 ECU", "填寫表單與發送 DID", "重灌 DiagBox", "向客戶報價"], c: 1 },
-        { q: "在引擎運作中，系統執行「退點火 (Retard)」的主要防禦目的是？", a: ["提升高轉速馬力", "降低油耗", "爆震或溫度異常時強行延後點火保護硬體", "加快熱車速度"], c: 2 },
-        { q: "DiagBox 紀錄波形中，水溫80度「怠速」狀態下，哪種感知器出現斷訊是正常的？", a: ["含氧感知器", "節氣門感知器", "高壓泵訊號", "爆震感知器"], c: 3 },
-        { q: "為什麼爆震感知器在正常怠速下會出現斷訊？", a: ["感知器硬體瑕疵", "因為怠速未產生強烈敲擊/爆震", "因為電腦主動切斷電源", "這是進入休眠模式的徵兆"], c: 1 },
+        // ====== Level 2: 初級技師 (基礎診斷與原理) ======
+        { level: 2, q: "將 VCI 連接至車輛後，啟動 DiagBox 時，系統通常會自動讀取哪項資訊來辨識車型？", a: ["引擎號碼", "車主姓名", "VIN 碼 (車身號碼)", "底盤型號"], c: 2 },
+        { level: 2, q: "在 DiagBox 中執行「Global Test (全局測試)」的作用是什麼？", a: ["清除全車數據", "掃描全車所有 ECU 模組，並顯示存在故障碼的電腦", "更新所有電腦軟體", "啟動引擎進行路試"], c: 1 },
+        { level: 2, q: "欲清除 ECU 內的故障碼 (DTC) 時，車輛狀態通常必須處於何種模式？", a: ["引擎怠速運轉中", "IG ON (紅火點火開啟) 但引擎不發動", "拔除電瓶狀態", "行駛速度 30km/h 以上"], c: 1 },
+        { level: 2, q: "Service Box 是 Stellantis 原廠提供的什麼系統？", a: ["員工打卡系統", "車主訂車系統", "原廠零件光碟與技術維修手冊查詢系統", "車輛導航圖資下載庫"], c: 2 },
+        { level: 2, q: "在原廠文件中，TSB (Technical Service Bulletin) 代表什麼？", a: ["技術服務通報，針對已知通病提供的標準維修方案", "零件報價單", "客戶滿意度調查", "汽車保險合約"], c: 0 },
+        { level: 2, q: "在 DiagBox 的「Servicing (保養)」選單中，通常包含下列哪一項功能？", a: ["更換引擎凸輪軸", "設定保養里程歸零或添加 DPF 添加劑重置", "修改引擎馬力輸出", "讀取 SRS 氣囊故障波形"], c: 1 },
+        { level: 2, q: "欲讀取煞車開關的即時踩踏信號，應進入 DiagBox 的哪個功能選單？", a: ["Fault Reading (讀取故障碼)", "Identification (識別)", "Standard Parameter Measurement (標準參數測量)", "Download (下載)"], c: 2 },
+        { level: 2, q: "含氧感知器 (O2 Sensor) 安裝在排氣管上，其主要用途是？", a: ["降低排氣噪音", "偵測排氣中的含氧量，以供電腦修正空燃比", "增加排氣流速", "測量排氣管震動"], c: 1 },
+        { level: 2, q: "DiagBox 的「作動器測試 (Actuator Test)」功能，主要用途為何？", a: ["由診斷電腦強制發出指令，驅動元件作動，藉此判斷硬體是否正常", "測試技師的反應速度", "清除儀表板積碳", "重新啟動 DiagBox"], c: 0 },
+        { level: 2, q: "當更換 Peugeot 遙控鑰匙的電池後，若遙控器無法作動，通常需要進行什麼步驟？", a: ["更換 BSI", "將鑰匙插入點火開關，切換至紅火並按住上鎖鍵數秒進行同步", "重新購買新鑰匙", "用電腦修改 VIN 碼"], c: 1 },
+        { level: 2, q: "DiagBox 中的 JDD 代表什麼意思？", a: ["車輛導航地圖", "故障日誌 (Journal des Défauts)，記錄全車歷史故障發生的時間與里程", "零件訂購清單", "引擎機油配方"], c: 1 },
+        { level: 2, q: "在 Service Box 中查詢維修手冊時，輸入 VIN 碼的最大好處是？", a: ["可以自動計算維修費用", "自動過濾出符合該車輛確切配備與年份的專屬維修指引與電路圖", "可以直接聯繫車主", "會自動產生保固申請單"], c: 1 },
+        { level: 2, q: "檢測節氣門位置感知器時，正常情況下隨油門踩踏，其電壓變化應呈現什麼狀態？", a: ["不規則跳動", "平滑且線性的電壓上升或下降", "固定在 12V 不變", "固定在 0V 不變"], c: 1 },
+        { level: 2, q: "若懷疑車輛漏電導致電瓶常沒電，應使用電表的哪一個檔位串聯進行檢測？", a: ["DCV (直流電壓檔)", "ACV (交流電壓檔)", "DCA (直流電流檔) 測量暗電流", "Ohm (電阻檔)"], c: 2 },
+        { level: 2, q: "更換機油後，除了實體換油外，儀表板的「扳手」保養指示燈應如何處理？", a: ["不需處理，會自動消失", "透過儀表板按鍵或 DiagBox 執行保養里程歸零", "拔除電瓶十分鐘", "行駛 100 公里後自動復原"], c: 1 },
+        { level: 2, q: "在 DiagBox 中，若 ECU 的狀態顯示為「Not Dialoguing (無法通訊)」，首先應檢查？", a: ["立刻更換該 ECU", "檢查該 ECU 的供電保險絲、接地與通訊線路", "更新 DiagBox 軟體版本", "更換 VCI 傳輸線"], c: 1 },
+        { level: 2, q: "在 DiagBox Record 中，若選擇「個性化參數測量」，單次最多可以讀取幾個參數？", a: ["5個", "10個", "15個", "無限制"], c: 1 },
+        { level: 2, q: "關於「標準參數測量」的敘述，下列何者正確？", a: ["可跨模組讀取", "單次最多讀取10個", "可讀取該單元所有參數", "不會顯示參數解釋"], c: 2 },
+        { level: 2, q: "在進行 JDD 分析前，紀錄數據後若未按下哪個按鈕，監控數據將會完全遺失？", a: ["儲存 Trace", "故障日誌", "圖表顯示", "匯出 CSV"], c: 1 },
+        { level: 2, q: "冷氣管路更換後，抽真空的主要「物理目的」之一，是為了排除空氣以避免什麼狀況？", a: ["避免系統產生高壓異常", "避免冷媒沸點過低", "避免冷凍油流失", "避免壓縮機空轉"], c: 0 },
+        { level: 2, q: "管路內若殘留水分，遇到低溫的膨脹閥時容易造成什麼現象？", a: ["酸堵", "氣堵", "冰堵", "油堵"], c: 2 },
+        { level: 2, q: "在進行技術支援 (如 DID 申請) 時，第一步「必要」的動作是什麼？", a: ["更換相關 ECU", "填寫表單與發送 DID", "重灌 DiagBox", "向客戶報價"], c: 1 },
+        { level: 2, q: "儀表板上的電子機油量尺，每 1 格代表多少毫升 (ml) 的機油？", a: ["100 ml", "250 ml", "400 ml", "500 ml"], c: 1 },
+        { level: 2, q: "到達工作溫度熄火後，需等待多久才能量測到最準確的機油油位？", a: ["立即量測", "5 分鐘", "30 分鐘", "隔夜"], c: 1 },
+        { level: 2, q: "GPF 燈號「持續亮起」且無警告燈，代表什麼？", a: ["GPF 永久損壞", "系統需補充添加劑", "系統正在進行微粒清潔(再生)，屬正常", "感知器斷線"], c: 2 },
+        { level: 2, q: "若 GPF 燈號與「警告燈」同步亮起，駕駛該如何應對？", a: ["繼續拉高轉速駕駛", "停車並原地點火", "儘速聯繫服務廠進行檢修，代表系統已故障", "無視並繼續行駛"], c: 2 },
+        { level: 2, q: "客戶反映 Giulia 車輛上鎖時方向燈「快閃」且提示音異常，通常代表？", a: ["電池電量過低", "車門/引擎蓋未能確實關閉", "非法入侵警報", "鑰匙沒電"], c: 1 },
+        { level: 2, q: "Alfa 車系正常的上鎖作動，方向燈的反應應為？", a: ["常亮 5 秒", "快閃 3 次", "閃爍 1 次且伴隨正常提示音", "完全不亮"], c: 2 },
+        { level: 2, q: "汽油噴射引擎中,將噴油嘴裝置在節氣門附近之型式是？", a: ["單點噴射", "共同噴射", "多點噴射", "連續噴射"], c: 0 },
+        { level: 2, q: "汽油噴射系統中,能保持燃油壓力一定的是？", a: ["空氣流量計", "脈動緩衝器", "電壓計", "油壓調節器"], c: 3 },
 
-        /* 儀表燈號與機油規範 (15題) */
-        { q: "在 Alfa 儀表邏輯中，「黃色」燈號代表什麼含意？", a: ["作動", "警戒", "停駛", "輔助"], c: 1 },
-        { q: "在 Alfa 儀表邏輯中，「藍色」燈號代表什麼含意？", a: ["作動", "警戒", "停駛", "輔助"], c: 3 },
-        { q: "在 Alfa 儀表邏輯中，「紅色」燈號代表什麼含意？", a: ["作動", "警戒", "停駛/危險", "輔助"], c: 2 },
-        { q: "Alfa 原廠規範的引擎機油「最大正常損耗量」為多少？", a: ["100 克/每千公里", "250 克/每千公里", "400 克/每千公里", "1公升/每千公里"], c: 2 },
-        { q: "儀表板上的電子機油量尺，每 1 格代表多少毫升 (ml) 的機油？", a: ["100 ml", "250 ml", "400 ml", "500 ml"], c: 1 },
-        { q: "螢幕上的機油量尺總共有幾格？", a: ["4格", "5格", "6格", "8格"], c: 2 },
-        { q: "若儀表板直接亮起「機油油位低」的警告，建議儘快加注多少機油？", a: ["0.5 公升", "1 公升", "2 公升", "補滿至滿油位"], c: 1 },
-        { q: "量測電子機油油位時，引擎水溫應大約處於多少度？", a: ["30度", "60度", "90度 (溫熱)", "冷車狀態"], c: 2 },
-        { q: "到達工作溫度熄火後，需等待多久才能量測到最準確的機油油位？", a: ["立即量測", "5 分鐘", "30 分鐘", "隔夜"], c: 1 },
-        { q: "儀表亮起「機油劣化更換提醒」時，車輛極限不可行駛超過多少公里，以免引擎損毀？", a: ["100 公里", "300 公里", "500 公里", "1000 公里"], c: 2 },
-        { q: "GPF 燈號「持續亮起」且無警告燈，代表什麼？", a: ["GPF 永久損壞", "系統需補充添加劑", "系統正在進行微粒清潔(再生)，屬正常", "感知器斷線"], c: 2 },
-        { q: "為配合 GPF 再生，最佳的行駛車速應保持在多少以上？", a: ["30 km/h", "60 km/h", "90 km/h", "120 km/h"], c: 1 },
-        { q: "為配合 GPF 再生，最佳的引擎轉速應維持在多少以上？", a: ["1000 rpm", "1500 rpm", "2000 rpm", "3500 rpm"], c: 2 },
-        { q: "若 GPF 燈號與「警告燈」同步亮起，駕駛該如何應對？", a: ["繼續拉高轉速駕駛", "停車並原地點火", "儘速聯繫服務廠進行檢修，代表系統已故障", "無視並繼續行駛"], c: 2 },
-        { q: "Stelvio 儀表不定時顯示「維修報警器」且防盜燈亮，可能指向 BCM 的什麼故障碼？", a: ["P2887-01", "B1073-96", "P0C2A-97", "U1000-00"], c: 1 },
+        // ====== Level 3: 中級技師 (進階維修) ======
+        { level: 3, q: "3008/5008 (EMP2平台) 在更換後煞車來令片前，必須使用 DiagBox 執行什麼安全操作？", a: ["放鬆方向盤鎖", "釋放電子手煞車 (EPB) 卡鉗馬達進入維修模式", "拔除電子節氣門接頭", "啟動引擎高轉速"], c: 1 },
+        { level: 3, q: "PureTech 1.2 引擎若發生正時皮帶泡油膨脹掉毛，最常導致引擎哪個部位阻塞而亮起機油壓力不足燈號？", a: ["排氣管觸媒", "冷卻水箱", "機油泵浦的集油濾網 (機油吸斗)", "燃油噴油嘴"], c: 2 },
+        { level: 3, q: "BlueHDi 系統中，SCR (選擇性觸媒還原) 系統的主要作用是針對哪種廢氣進行還原？", a: ["CO (一氧化碳)", "NOx (氮氧化物)", "HC (碳氫化合物)", "PM (懸浮微粒)"], c: 1 },
+        { level: 3, q: "Peugeot 2008 等新世代車款，進行 BSI 斷電或拔除電瓶前，必須嚴格遵守「休眠程序 (3分鐘規定)」的原因為何？", a: ["讓引擎冷卻", "確保 BSI 內部的 EEPROM 數據完全寫入記憶體，避免電腦資料遺失或損毀", "讓機油回流", "讓冷媒壓力下降"], c: 1 },
+        { level: 3, q: "在 DiagBox 中，「手動配置 (Telecoding Manual)」通常在什麼情況下使用？", a: ["每次啟動電腦時", "當自動連線配置失敗，或原廠允許在離線狀態下手動更改車輛配備選項時", "僅用於更新圖資", "用於清除故障碼"], c: 1 },
+        { level: 3, q: "進行 ECU 軟體下載更新 (Download) 時，為了防止電壓異常導致刷機失敗甚至電腦鎖死，必須連接什麼設備？", a: ["打氣機", "吸塵器", "穩壓充電機 (維持電壓在 13V 以上)", "另一台發動中的車輛"], c: 2 },
+        { level: 3, q: "CAN Bus 網路啟動且處於活躍通訊 (Active) 狀態時，CAN High 與 CAN Low 的電壓大約落在哪個區間？", a: ["皆為 12V", "皆為 0V", "CAN H 約 2.5~3.5V, CAN L 約 1.5~2.5V", "CAN H 5V, CAN L 0V"], c: 2 },
+        { level: 3, q: "相較於 CAN Bus，LIN Bus (局部互聯網路) 具有什麼特徵？", a: ["傳輸速度極快，用於引擎控制", "雙線式網路，抗干擾強", "單線式網路，傳輸速度較慢，通常應用於車窗、雨刷或發電機等周邊控制", "不需要主節點"], c: 2 },
+        { level: 3, q: "三缸引擎若發生單缸嚴重缺火 (Misfire)，除了點火線圈與火星塞外，還應考慮使用缸壓錶檢查什麼？", a: ["冷氣壓力", "汽缸的壓縮壓力是否正常 (排除汽門燒毀或活塞環損壞)", "機油壓力", "輪胎胎壓"], c: 1 },
+        { level: 3, q: "渦輪增壓系統中的廢氣旁通閥 (Wastegate)，其主要功能為何？", a: ["降低排氣溫度", "控制進入渦輪的廢氣量，以調節並限制最大渦輪增壓壓力", "增加進氣溫度", "過濾機油"], c: 1 },
+        { level: 3, q: "缸內直噴引擎的燃油高壓泵浦 (HPFP) 通常是由什麼部件透過凸輪驅動的？", a: ["發電機皮帶", "引擎凸輪軸", "啟動馬達", "水泵浦"], c: 1 },
+        { level: 3, q: "懷疑噴油嘴漏油導致熱車難啟動時，最安全的靜態測試方法是？", a: ["用打火機在排氣管測試", "執行燃油系統保壓測試，觀察熄火後油軌壓力是否快速衰退", "拆下噴油嘴看顏色", "直接更換全車噴油嘴"], c: 1 },
+        { level: 3, q: "EGR (廢氣再循環) 閥的開啟，主要目的是降低燃燒室溫度，進而減少哪種污染物的生成？", a: ["PM 微粒", "NOx 氮氧化物", "CO2 二氧化碳", "H2O 水蒸氣"], c: 1 },
+        { level: 3, q: "現代 Stellantis 引擎常採用「電子控制節溫器 (水龜)」，其最大優勢為何？", a: ["完全不會壞", "可由電腦根據引擎負載主動加熱提早開啟，精確控制引擎水溫", "體積比傳統水龜大十倍", "不需要冷卻水"], c: 1 },
+        { level: 3, q: "執行 ADAS 前方攝影機 (鏡頭) 的動態校正時，通常有什麼嚴格要求？", a: ["必須在下雨天進行", "車輛必須靜止不動", "必須在標線清晰的道路上，以規定車速行駛一段距離", "必須在無光的全黑環境"], c: 2 },
+        { level: 3, q: "Peugeot 408 若多媒體螢幕完全當機無反應，技師可優先嘗試什麼快速操作？", a: ["直接更換螢幕", "長按中控台特定按鍵 (如車輛圖示或音量鍵) 強制重置多媒體系統", "用鐵錘敲擊", "更換機油"], c: 1 },
+        { level: 3, q: "更換具備電子離合器的水泵浦時，必須在 DiagBox 內執行什麼操作？", a: ["重設收音機頻道", "元件作動測試與學習初始化，以確保摩擦輪正確接合", "修改引擎排氣量", "清除胎壓異常"], c: 1 },
+        { level: 3, q: "診斷車輛偶發故障時，客戶表示「時速80且踩煞車時才會發生」，此時最適合使用 DiagBox 的什麼功能？", a: ["讀取保養里程", "開啟 Record 錄製行駛動態數據，並針對車速與煞車信號進行波形分析", "直接更新所有 ECU", "更換煞車踏板"], c: 1 },
+        { level: 3, q: "個性化參數測量是否允許「跨電腦」讀取訊號？", a: ["可以，沒有任何限制", "可以，但只能跨引擎與變速箱", "不可以，無法跨電腦監控", "需視車輛年份而定"], c: 2 },
+        { level: 3, q: "DiagBox 產出的 JDD 檔案，會以什麼格式供技師匯入試算表分析？", a: ["PDF", "TXT", "XML", "CSV"], c: 3 },
+        { level: 3, q: "匯入 JDD 試算表後，想分析進場前幾天的故障情形，建議的第一步排版動作為何？", a: ["隱藏全部空白欄位", "對日期欄位進行排序 (A 到 Z)", "繪製電壓折線圖", "將英文字體全數轉為中文"], c: 1 },
+        { level: 3, q: "若車輛處於 IG OFF (點火開關關閉) 狀態，DiagBox Record 功能是否能持續紀錄數據？", a: ["可以，只要不斷電", "可以，限定記錄10筆", "不可以，無法紀錄", "可以，但僅限低壓模組"], c: 2 },
+        { level: 3, q: "抽真空能讓管路內的液態水發生什麼變化以利抽出？", a: ["降低凝固點變冰", "降低沸點使其在常溫下沸騰化為蒸氣", "與冷凍油乳化結合", "增加表面張力"], c: 1 },
+        { level: 3, q: "冷氣系統清洗完畢，建議將深度抽真空程序的實務時間延長至多久？", a: ["10-15分鐘", "20-30分鐘", "45-60分鐘", "120分鐘以上"], c: 2 },
+        { level: 3, q: "在引擎運作中，系統執行「退點火 (Retard)」的主要防禦目的是？", a: ["提升高轉速馬力", "降低油耗", "爆震或溫度異常時強行延後點火保護硬體", "加快熱車速度"], c: 2 },
+        { level: 3, q: "為配合 GPF 再生，最佳的引擎轉速應維持在多少以上？", a: ["1000 rpm", "1500 rpm", "2000 rpm", "3500 rpm"], c: 2 },
+        { level: 3, q: "相較於 Witech，DiagBox 產出的診斷資料會自動建立幾種語言？", a: ["1種", "2種", "3種", "5種"], c: 2 },
+        { level: 3, q: "Witech 診斷系統中，若要查看故障發生當下的環境數值，可檢視什麼資料？", a: ["凍結資料/快照/事件資料", "車主手冊", "TSB 通報", "服務保養紀錄"], c: 0 },
+        { level: 3, q: "測量活塞環之邊間隙應使用哪一種工具？", a: ["線規", "厚薄規", "量缸錶", "內徑測微器"], c: 1 },
+        { level: 3, q: "某汽油噴射引擎發動後無法維持怠速運轉,下列何者應優先檢查？", a: ["引擎電腦電源搭鐵", "大氣壓力感知器", "引擎轉速感知器", "怠速控制閥或真空漏氣"], c: 3 },
 
-        /* ADAS 系統與 Witech 防盜通訊 (10題) */
-        { q: "ACC (主動式車距調節巡航) 系統，主要負責哪個方向的車輛控制？", a: ["橫向控制 (左右)", "縱向控制 (前後)", "四輪獨立煞車控制", "垂直高度控制"], c: 1 },
-        { q: "HAS (高速公路輔助系統) 結合了 ACC 與什麼邏輯？", a: ["自動變換車道", "車道置中邏輯 (橫向控制)", "自動煞停入庫", "夜視行人偵測"], c: 1 },
-        { q: "客戶反映 Giulia 車輛上鎖時方向燈「快閃」且提示音異常，通常代表？", a: ["電池電量過低", "車門/引擎蓋未能確實關閉", "非法入侵警報", "鑰匙沒電"], c: 1 },
-        { q: "使用 Witech 系統建檔診斷報告時，原廠建議使用何種語言？", a: ["僅法文", "僅中文", "中英文同時建檔", "不需要文字，截圖即可"], c: 2 },
-        { q: "若 Witech 診斷僅建立中文報告，將案件升級至 L2 支援時容易發生什麼狀況？", a: ["系統自動翻譯", "原廠工程師無法判讀，需請客戶回廠補件，增加客訴風險", "檔案會被強制退回 L0", "無任何影響"], c: 1 },
-        { q: "相較於 Witech，DiagBox 產出的診斷資料會自動建立幾種語言？", a: ["1種", "2種", "3種", "5種"], c: 2 },
-        { q: "Witech 診斷系統中，若要查看故障發生當下的環境數值，可檢視什麼資料？", a: ["凍結資料/快照/事件資料", "車主手冊", "TSB 通報", "服務保養紀錄"], c: 0 },
-        { q: "在進行 Witech 診斷時，若遇到 L1 無法解決的問題，應向哪一級別尋求支援？", a: ["L0", "L2", "L3", "L4"], c: 1 },
-        { q: "Alfa 車系正常的上鎖作動，方向燈的反應應為？", a: ["常亮 5 秒", "快閃 3 次", "閃爍 1 次且伴隨正常提示音", "完全不亮"], c: 2 },
-        { q: "車輛進入休眠前，若在執行診斷紀錄，是否必須將「所有車門關閉」？", a: ["是，維持休眠狀態的標準規範", "否，開著門不會影響休眠", "僅需關閉駕駛座車門", "視電瓶電壓而定"], c: 0 }
+        // ====== Level 4: 高級技師 (深度診斷與網路) ======
+        { level: 4, q: "當 DiagBox 掃描出大量「U 開頭」的故障碼 (如 U1208)，通常代表車輛存在什麼問題？", a: ["感知器硬體斷路", "網路通訊故障 (CAN/LIN Bus 節點間遺失通訊)", "引擎缸壓不足", "輪胎破掉"], c: 1 },
+        { level: 4, q: "執行漏電 (Parasitic Draw) 測試時，車輛必須處於什麼狀態？", a: ["引擎怠速運轉", "紅火 (IG ON) 狀態", "全車上鎖並等待網路完全進入休眠 (Sleep Mode)", "大燈開啟狀態"], c: 2 },
+        { level: 4, q: "使用示波器測量 CAN Bus 高速網路時，CAN High 與 CAN Low 的波形應該呈現什麼特徵？", a: ["兩者波形完全相同重疊", "兩者波形呈現完美的「鏡像對稱」跳動", "一條是直線，一條是波浪", "皆維持在 12V 直線"], c: 1 },
+        { level: 4, q: "為了精準判斷正時皮帶或鏈條是否跳齒，最高階且不需拆卸引擎的檢測方法是？", a: ["用聽診器聽聲音", "使用示波器同時測量「曲軸位置感知器」與「凸輪軸位置感知器」的波形相位差", "讀取機油溫度", "看排氣管顏色"], c: 1 },
+        { level: 4, q: "汽缸漏氣率測試 (Leak-down test) 相較於傳統缸壓測試，最大的優勢是什麼？", a: ["測試速度比較快", "可以透過聽漏氣聲音的位置 精確判斷是汽門、活塞環或汽缸床墊片損壞", "不需要拆火星塞", "可以用 DiagBox 直接讀取"], c: 1 },
+        { level: 4, q: "測量 ECU 輸出的 PWM (脈衝寬度調變) 信號時，若 Duty Cycle (工作週期) 變大，代表什麼？", a: ["電壓頻率降低", "控制元件被驅動的「開啟時間比例」增加，輸出功率變大", "線路發生短路", "保險絲即將燒毀"], c: 1 },
+        { level: 4, q: "引擎控制單元中的「燃油長期修正值 (LTFT)」，若數值呈現極度的『正值』(如 +20%)，代表引擎處於什麼狀態？", a: ["供油過濃，系統正在減少噴油", "混合氣過稀，電腦正在增加噴油脈寬來補償", "引擎溫度過低", "系統一切正常"], c: 1 },
+        { level: 4, q: "VGT 可變幾何渦輪系統中，若電腦報出「渦輪位置感知器信號不合理」，除了感知器本身，最常見的物理原因是？", a: ["渦輪進氣管破裂", "VGT 導流葉片因積碳而卡滯，導致作動器無法將葉片推至電腦預期位置", "機油壓力過高", "冷卻水溫過高"], c: 1 },
+        { level: 4, q: "診斷 EPB (電子手煞車) 故障時，若懷疑卡鉗馬達卡死，可透過測量什麼數據來客觀佐證？", a: ["馬達外殼溫度", "馬達作動時的電流波形 (卡死時峰值電流會異常飆高)", "煞車油管壓力", "輪胎氣壓"], c: 1 },
+        { level: 4, q: "3008/5008 的電動尾門若發生「自動反向退回」故障，應優先使用 DiagBox 查看什麼參數？", a: ["尾門撐桿馬達的耗電電流與防夾感知條 (Pinch Sensor) 的電阻變化", "倒車雷達距離", "後擋風玻璃加熱電流", "尾門烤漆厚度"], c: 0 },
+        { level: 4, q: "Peugeot 408 搭載的 Matrix LED 矩陣大燈，若更換大燈總成，必須進行什麼處理？", a: ["直接鎖上即可", "透過 DiagBox 進行模組參數下載、大燈硬體高度與矩陣分區的數位校準", "更換雨刷撥桿", "切斷電瓶負極重置"], c: 1 },
+        { level: 4, q: "診斷 PureTech 可變汽門正時 (VVT) 系統異常時，若電磁閥電阻正常但仍報錯，最可能的硬體原因是？", a: ["電磁閥內部機油濾網被皮帶碎屑阻塞，導致油壓無法推動相位器", "火星塞間隙過大", "排氣管破洞", "進氣濾芯太髒"], c: 0 },
+        { level: 4, q: "解讀 BlueHDi 的 NOx 感知器數據時，SCR 觸媒「後方」的 NOx 數值理應如何？", a: ["與前方完全相同", "比前方數值大幅下降 (代表還原效率良好)", "高於 1000 ppm", "呈現不規則震盪"], c: 1 },
+        { level: 4, q: "柴油車 DPF 強制再生一直失敗，除了碳載量過高外，還必須檢查哪個先決條件是否滿足？", a: ["音響是否關閉", "引擎冷卻水溫是否達到標準、排氣溫度感知器信號是否正常", "車窗是否降下", "方向盤是否打正"], c: 1 },
+        { level: 4, q: "準備 DID-A 技術支援案件時，總部工程師最需要什麼客觀資料來協助判定複雜故障？", a: ["技師手寫的抱怨信", "完整清晰的 DiagBox 全局測試報告、故障環境快照、以及異常參數的 Record 圖表截圖", "車輛外觀照片", "維修報價單"], c: 1 },
+        { level: 4, q: "當測量 CAN 總線診斷接頭的電阻時，若測得約 60 歐姆，代表什麼意義？", a: ["線路短路", "線路斷路", "網路中的兩個 120 歐姆終端電阻並聯正常", "電瓶沒電"], c: 2 },
+        { level: 4, q: "若測得 CAN 總線電阻為 120 歐姆，這通常暗示什麼嚴重故障？", a: ["一切正常", "網路中有一個終端電阻或主幹通訊線發生斷路", "電阻過低", "煞車輔助失效"], c: 1 },
+        { level: 4, q: "在 JDD (故障日誌) 中，Context Data (環境數據) 的重要性為何？", a: ["只是亂碼", "能顯示故障發生「瞬間」的車速、轉速、水溫等條件，是抓偶發故障的核心線索", "用來計算維修工資", "記錄車主的導航路線"], c: 1 },
+        { level: 4, q: "若懷疑引擎控制單元 (ECU) 內部記憶體或 EEPROM 損壞，在技術報告中最客觀的描述方式應為？", a: ["電腦燒掉了", "我覺得是電腦壞了", "已排除所有周邊感知器與線路皆正常，且故障碼明確指向內部硬體錯誤", "電腦讀不到，請出保固"], c: 2 },
+        { level: 4, q: "在 MRI 軟體中觀看波形圖表時，若畫面全滿 (全綠)，技師應特別注意什麼以正確判讀？", a: ["右側的 Y 軸單位", "左下角的車身碼", "波形的波峰與波谷差值", "背景的 X 軸時間戳記"], c: 0 },
+        { level: 4, q: "執行「真空衰減測試」測漏時，系統抽至深真空後需靜置觀察多久看指針是否回升？", a: ["1-3分鐘", "10-15分鐘", "30分鐘以上", "完全不需要等待"], c: 1 },
+        { level: 4, q: "EDCT6/MHEV車型故障碼「P2887 01 (電氣故障未特徵化)」指向哪一個零件異常？", a: ["啟動發電機", "駐車撥叉鎖定電磁閥", "離合器控制泵執行器", "電動機 MCU"], c: 1 },
+        { level: 4, q: "承上題，當發生 P2887 01 故障時，車輛會有什麼明顯表徵？", a: ["僅純電模式無法啟動", "時速超過60km/h會頓挫", "無論是否點火引擎都無法啟動", "倒車時無動力"], c: 2 },
+        { level: 4, q: "DiagBox 紀錄波形中，水溫80度「怠速」狀態下，哪種感知器出現斷訊是正常的？", a: ["含氧感知器", "節氣門感知器", "高壓泵訊號", "爆震感知器"], c: 3 },
+        { level: 4, q: "為什麼爆震感知器在正常怠速下會出現斷訊？", a: ["感知器硬體瑕疵", "因為怠速未產生強烈敲擊/爆震", "因為電腦主動切斷電源", "這是進入休眠模式的徵兆"], c: 1 },
+        { level: 4, q: "Stelvio 儀表不定時顯示「維修報警器」且防盜燈亮，可能指向 BCM 的什麼故障碼？", a: ["P2887-01", "B1073-96", "P0C2A-97", "U1000-00"], c: 1 },
+        { level: 4, q: "汽油噴射引擎造成怠速混合氣過濃的可能原因,下列何者正確？", a: ["燃油壓力調節器之真空管破裂或脫落導致油壓過高", "燃油壓力太低", "二者都正確", "二者都不正確"], c: 0 },
+        { level: 4, q: "有關汽油噴射引擎電子節氣門之敘述,下列何者正確？", a: ["電子節氣門主要是由節氣門、驅動馬達及節氣門位置感知器所組成", "節氣門的開度是僅由引擎負荷訊號決定", "引擎電腦會監測電子節氣門的動作,以避免作用不正常", "A與C皆正確"], c: 3 },
+        { level: 4, q: "TCS (防滑循跡控制系統) 在何種情況下被啟動以維持其循跡力？", a: ["當驅動輪被偵測到相對於非驅動輪產生過度打滑時", "當車外溫度低於攝氏0度時", "當任何檔位超過規定時速時", "當方向盤轉動的速度超過規定極限時"], c: 0 },
+        { level: 4, q: "下列哪種型式的感知器是由 TCS 與 VSC (車身動態穩定系統) 共同使用的核心感知器？", a: ["轉向角度感知器", "輪速感知器", "橫向G力與橫擺角速度感知器 (Yaw Rate)", "以上皆是"], c: 3 },
+
+        // ====== Level 5: 大師級技師 (網關與極端深度分析) ======
+        { level: 5, q: "Stellantis 車系導入的資訊安全網關 (SGW / Secure Gateway) 主要作用為何？", a: ["防止技師偷懶", "阻擋未經授權的第三方診斷儀向車輛 ECU 寫入指令或清除故障，保護車輛免受攻擊", "限制車速", "提供車內 Wi-Fi"], c: 1 },
+        { level: 5, q: "遇到 SGW 保護的車輛，技師必須如何才能正常執行清除故障碼或作動器測試？", a: ["拔掉網關保險絲", "必須使用具備連網授權的 DiagBox (透過伺服器取得憑證解鎖網關)", "更換 BSI", "輸入車主密碼"], c: 1 },
+        { level: 5, q: "使用示波器電流鉗測量汽油噴油嘴波形時，波形的「峰值」與「保持段」能揭示什麼隱藏訊息？", a: ["燃油的辛烷值", "噴油嘴內部電磁線圈的機械作動延遲(Pintle bump)與針閥開啟狀態", "水溫高低", "進氣門積碳程度"], c: 1 },
+        { level: 5, q: "診斷 BSI 喚醒線 (Wake-up line) 異常時，若電壓始終保持在高位 (不下降)，會導致什麼後果？", a: ["大燈變暗", "全車網路無法進入休眠，模組持續耗電導致隔天電瓶完全沒電", "引擎馬力提升", "方向盤鎖死"], c: 1 },
+        { level: 5, q: "車載乙太網 (Automotive Ethernet) 逐漸取代部分 CAN 總線的原因為何？", a: ["成本較低", "接線較少", "具備極高的頻寬與傳輸速率 (如 100Mbps/1Gbps)，能應付 ADAS 鏡頭等龐大數據量", "能傳輸高壓電"], c: 2 },
+        { level: 5, q: "FlexRay 網路匯流排在先進車輛平台中，主要應用於哪些高安全性需求的系統？", a: ["車窗與雨刷控制", "音響與空調系統", "底盤線控、主動懸吊與高階 ADAS 自動駕駛輔助系統", "座椅加熱"], c: 2 },
+        { level: 5, q: "在不拔除保險絲的前提下，最精準尋找暗電流 (漏電) 的高階檢測法是什麼？", a: ["用手摸保險絲溫度", "使用高精度萬用電表測量保險絲兩端的「微伏特 (mV) 電壓降」，換算出漏電流", "把所有繼電器拔掉", "用診斷電腦直接讀取"], c: 1 },
+        { level: 5, q: "使用示波器檢測 LIN Bus 網路時，如何從波形判斷信號是「主節點」還是「從節點」發出的？", a: ["看波形顏色", "觀察下拉電壓的幅度，由於內部電阻差異，主節點與從節點拉低電壓的深度會有些微不同", "看波形的頻率", "LIN 網路無法用示波器測量"], c: 1 },
+        { level: 5, q: "診斷 SCR 尿素系統時，若發現 NOx 還原效率極低，除了感知器外，還必須透過電腦檢測尿素泵浦的什麼參數？", a: ["尿素箱溫度", "尿素管路建壓是否達到標準工作壓力 (通常為 5-6 bar) 且噴嘴作動正常", "尿素的顏色", "排氣管震動"], c: 1 },
+        { level: 5, q: "PureTech 引擎若因正時皮帶碎屑導致真空泵浦 (Vacuum Pump) 濾網堵塞，可能引發什麼連帶故障？", a: ["冷氣不冷", "廢氣旁通閥 (Wastegate) 失去真空控制，導致渦輪增壓不足並亮起引擎燈", "方向機失效", "方向盤鎖死"], c: 1 },
+        { level: 5, q: "在進行 BSI 更換作業前，最關鍵的預備動作是什麼？", a: ["將油箱加滿", "盡可能透過 DiagBox 執行「BSI 備份 (Backup)」或詳細記錄原有的配置編碼", "拆除引擎電腦", "發動引擎"], c: 1 },
+        { level: 5, q: "執行防盜系統 (Immobilizer) 匹配編程時，技師必須具備什麼先決條件？", a: ["車主的信用卡", "該車專屬的 4 位數防盜密碼 (PIN Code) 與兩把以上的原廠鑰匙", "全新的儀表板", "原廠出廠證明"], c: 1 },
+        { level: 5, q: "當多個無關的模組 (如 ABS、儀表、引擎電腦) 同時報出 U 碼通訊異常，大師級技師應優先懷疑什麼？", a: ["所有電腦剛好同時燒毀", "主搭鐵點嚴重氧化接觸不良，或 CAN 主幹實體線路遭受短路干擾", "冷卻水不足", "輪胎破掉"], c: 1 },
+        { level: 5, q: "引擎燃燒室內的「退點火(Retard)」通常是為了達成什麼終極保護機制？", a: ["降低排氣溫度", "當電腦偵測到爆震(Knock)或極高溫時，強制延後點火以避免引擎硬體炸毀", "加快暖車", "增加馬力"], c: 1 },
+        { level: 5, q: "使用「汽缸壓力傳感器」搭配示波器量測引擎動態缸壓波形，可以精準診斷出什麼問題？", a: ["機油衰退程度", "汽門開啟與關閉的絕對正時角度，甚至能看出排氣管是否輕微阻塞", "水泵浦是否漏水", "發電機發電量"], c: 1 },
+        { level: 5, q: "配備智能發電機 (Smart Alternator) 的車輛，在急加速時，引擎電腦通常會下達什麼指令？", a: ["飆升至最高電壓", "降低發電機負載 (甚至暫停發電)，將引擎動力全數釋放用於車輛加速", "維持恆定不變", "導致引擎熄火"], c: 1 },
+        { level: 5, q: "1.5 BlueHDi (DV5) 引擎若出現「凸輪軸鏈條張力器磨損」的通病，初期最明顯的症狀是什麼？", a: ["排氣管冒白煙", "冷車啟動時，汽門蓋上方出現明顯的鏈條金屬敲擊聲 (Rattle noise)", "水溫異常升高", "冷氣壓縮機異音"], c: 1 },
+        { level: 5, q: "GPF/DPF (微粒過濾器) 系統的再生邏輯中，電腦是依靠什麼核心感知器來判斷微粒的累積阻塞量？", a: ["含氧感知器", "安裝於過濾器前、後的「壓差感知器 (Differential Pressure Sensor)」", "空氣流量計", "爆震感知器"], c: 1 },
+        { level: 5, q: "更換電子動力輔助轉向系統 (EPS) 的方向機總成後，除了清除故障碼，還必須進行什麼核心校正？", a: ["引擎怠速學習", "扭力感知器零點校正與方向盤轉角感知器絕對位置學習", "油門踏板深度學習", "輪胎胎壓重置"], c: 1 },
+        { level: 5, q: "在 DiagBox 中，為何更換全新 BSI 後通常必須執行「網路拓樸 (Network Topology)」的學習配置？", a: ["為了更改車身顏色", "讓全新 BSI 識別車上實際存在的 ECU 節點，否則會因為找不到未選配的電腦而報出大量幽靈故障碼", "為了升級馬力", "為了開啟隱藏功能"], c: 1 },
+        { level: 5, q: "使用脈波寬度調變(PWM)控制之發電機充電系統,其特性說明下列何者正確？", a: ["主要透過引擎電腦發送 Duty Cycle 訊號控制發電機發電量", "與傳統式相較,可藉由精準控制發電量來減輕引擎負載以節省燃油", "電瓶溫度高時,系統會主動降低充電電壓以保護電瓶", "以上皆是"], c: 3 },
+        { level: 5, q: "當車輛儀表不定時顯示多項毫無關聯的系統故障 (例如：變速箱、ABS、儀表同時亮燈)，且診斷儀讀取到多個模組皆報出通訊異常，大師級技師應優先懷疑什麼？", a: ["所有模組剛好同時燒毀", "電瓶端子鬆動、主搭鐵線氧化接觸不良，或 CAN 總線主幹遭受干擾短路", "煞車油量不足", "方向盤未打正"], c: 1 }
     ];
 
+    // ============================================================
+    // ★ 全盲測 - 自適應引擎狀態 (Blind Adaptive Logic) ★
+    // ============================================================
     let state = {
-        dealer: "", name: "", currentQ: 0, score: 0,
-        logs: [], timer: 1800, interval: null, 
+        dealer: "", name: "", 
+        currentQ: 0, 
+        rawScore: 0, // 實際獲得的權重分數
+        logs: [], 
         qTimer: 120, qInterval: null,
         isAnswered: false, inProgress: false,
-        selectedQuestions: [] 
+        
+        currentDifficultyLevel: 1, // 所有人第一題必定從 Level 1 開始
+        maxQuestions: 35,          // 總共考 35 題
+        usedQuestions: new Set(),  // 防止重複
+        currentQuestionData: null
+    };
+
+    let isFormSubmitted = false;
+
+    // 定義階級名稱
+    const rankTitles = {
+        1: "新手學徒",
+        2: "初級技師",
+        3: "中級技師",
+        4: "高級技師",
+        5: "大師級專家"
+    };
+
+    document.getElementById('hidden_iframe').onload = function() {
+        if(isFormSubmitted) {
+            document.getElementById("quiz-screen").classList.add("hidden");
+            document.getElementById("result-screen").classList.remove("hidden");
+            document.getElementById("res-dealer").innerText = state.dealer;
+            document.getElementById("res-name").innerText = state.name;
+            // 盲測模式：隱藏所有成績與等級，只顯示完成訊息。
+        }
     };
 
     function shuffleArray(array) {
@@ -248,18 +359,6 @@
     });
 
     function startExam() {
-        if (ENABLE_EXAM_WINDOW) {
-            const now = new Date();
-            if (now < EXAM_START) {
-                alert("測驗尚未開始！\n開放時間為：" + EXAM_START.toLocaleString('zh-TW') + " ~ " + EXAM_END.toLocaleString('zh-TW'));
-                return;
-            }
-            if (now > EXAM_END) {
-                alert("測驗已結束！\n開放時間為：" + EXAM_START.toLocaleString('zh-TW') + " ~ " + EXAM_END.toLocaleString('zh-TW'));
-                return; 
-            }
-        }
-
         const d = document.getElementById("dealer-input").value.trim();
         const n = document.getElementById("name-input").value.trim();
         if (!d || !n) return alert("請完整填寫經銷商與姓名！");
@@ -267,22 +366,6 @@
         state.dealer = d; 
         state.name = n;
         state.inProgress = true; 
-
-        const TOTAL_QUESTIONS_TO_ASK = 20; 
-        let randomQuestions = shuffleArray(allQuizData).slice(0, TOTAL_QUESTIONS_TO_ASK);
-        
-        state.selectedQuestions = randomQuestions.map(q => {
-            let originalCorrectText = q.a[q.c]; 
-            let shuffledOptions = shuffleArray(q.a); 
-            let newCorrectIndex = shuffledOptions.indexOf(originalCorrectText); 
-            
-            return {
-                q: q.q,
-                a: shuffledOptions,
-                c: newCorrectIndex,
-                ...(q.img ? { img: q.img } : {})
-            };
-        });
         
         document.getElementById("login-screen").classList.add("opacity-0", "scale-95");
         setTimeout(() => {
@@ -292,34 +375,36 @@
             void quiz.offsetWidth;
             quiz.classList.remove("opacity-0", "scale-95");
 
-            if (!ENABLE_TIMERS) {
-                document.getElementById("timers-wrapper").classList.add("hidden");
-            } else {
-                startGlobalTimer();
-            }
-            loadQuestion();
+            loadNextAdaptiveQuestion();
         }, 300);
     }
 
-    function startGlobalTimer() {
-        const display = document.getElementById("timer-display");
-        state.interval = setInterval(() => {
-            state.timer--;
-            let m = Math.floor(state.timer / 60).toString().padStart(2, '0');
-            let s = (state.timer % 60).toString().padStart(2, '0');
-            display.innerText = `⏱️ 總時: ${m}:${s}`;
+    // 抽取動態難度考題
+    function getNextQuestion() {
+        let availableQs = allQuizData.map((q, index) => ({...q, globalIndex: index}))
+                                     .filter(q => q.level === state.currentDifficultyLevel && !state.usedQuestions.has(q.globalIndex));
+        
+        if (availableQs.length === 0) {
+            availableQs = allQuizData.map((q, index) => ({...q, globalIndex: index}))
+                                     .filter(q => !state.usedQuestions.has(q.globalIndex));
+        }
 
-            if (state.timer <= 300) display.classList.add("blink-red");
+        let q = availableQs[Math.floor(Math.random() * availableQs.length)];
+        state.usedQuestions.add(q.globalIndex);
 
-            if (state.timer <= 0) {
-                alert("總測驗時間到！系統將自動交卷。");
-                forceSubmit(false);
-            }
-        }, 1000);
+        let originalCorrectText = q.a[q.c]; 
+        let shuffledOptions = shuffleArray(q.a); 
+        let newCorrectIndex = shuffledOptions.indexOf(originalCorrectText); 
+
+        return {
+            q: q.q,
+            a: shuffledOptions,
+            c: newCorrectIndex,
+            level: q.level
+        };
     }
 
     function startQuestionTimer() {
-        if (!ENABLE_TIMERS) return;
         clearInterval(state.qInterval);
         state.qTimer = 120; 
         updateQTimerDisplay();
@@ -352,46 +437,42 @@
         if (state.isAnswered) return;
         state.isAnswered = true;
 
-        const qData = state.selectedQuestions[state.currentQ];
+        const qData = state.currentQuestionData;
         const correctIndex = qData.c;
         const allBtns = document.querySelectorAll(".option-btn");
         const fbBox = document.getElementById("feedback-box");
 
-        allBtns.forEach(b => b.classList.add("disabled-btn", "opacity-50"));
-        allBtns[correctIndex].classList.remove("opacity-50");
-        allBtns[correctIndex].classList.add("correct-ans");
+        allBtns.forEach(b => b.classList.add("disabled-btn"));
 
-        let logText = `Q${state.currentQ + 1}:[未答] 逾時未作答 / 正解:${qData.a[correctIndex]}`;
-        fbBox.innerText = `⏳ 測驗逾時！本題未得分。正確答案應為：「${qData.a[correctIndex]}」`;
-        fbBox.className = "p-5 rounded-xl mb-6 font-bold text-center text-lg shadow-sm border border-orange-200 bg-orange-50 text-orange-700 block";
+        let logText = `Q${state.currentQ + 1}(L${qData.level}):[未答] 逾時未作答 / 正解應為:${qData.a[correctIndex]}`;
+        
+        // 盲測提示
+        fbBox.innerText = "⏳ 測驗逾時！已自動記錄為未作答，請前往下一題。";
+        fbBox.className = "p-5 rounded-xl mb-6 font-bold text-center text-lg shadow-sm border border-slate-200 bg-slate-50 text-slate-700 block";
 
         state.logs.push(logText);
+        
+        if (state.currentDifficultyLevel > 1) {
+            state.currentDifficultyLevel--;
+        }
+
         document.getElementById("next-btn").classList.remove("hidden");
     }
 
-    function loadQuestion() {
+    function loadNextAdaptiveQuestion() {
         state.isAnswered = false;
         document.getElementById("next-btn").classList.add("hidden");
         document.getElementById("feedback-box").classList.add("hidden");
         
         clearInterval(state.qInterval);
         
-        const qData = state.selectedQuestions[state.currentQ];
-        const totalQ = state.selectedQuestions.length;
+        state.currentQuestionData = getNextQuestion();
+        const qData = state.currentQuestionData;
         
-        document.getElementById("progress-text").innerText = `第 ${state.currentQ + 1} / ${totalQ} 題`;
-        document.getElementById("progress-bar").style.width = `${((state.currentQ + 1) / totalQ) * 100}%`;
+        document.getElementById("progress-text").innerText = `第 ${state.currentQ + 1} / ${state.maxQuestions} 題`;
+        document.getElementById("progress-bar").style.width = `${((state.currentQ + 1) / state.maxQuestions) * 100}%`;
+        
         document.getElementById("question-text").innerText = `${state.currentQ + 1}. ${qData.q}`;
-
-        const imgContainer = document.getElementById("question-image-container");
-        const imgElement = document.getElementById("question-image");
-        if (qData.img) {
-            imgElement.src = qData.img;
-            imgContainer.classList.remove("hidden");
-        } else {
-            imgElement.src = "";
-            imgContainer.classList.add("hidden");
-        }
 
         const opts = document.getElementById("options-container");
         opts.innerHTML = "";
@@ -413,78 +494,84 @@
         
         clearInterval(state.qInterval); 
 
-        const qData = state.selectedQuestions[state.currentQ];
+        const qData = state.currentQuestionData;
         const correctIndex = qData.c;
         const allBtns = document.querySelectorAll(".option-btn");
         const fbBox = document.getElementById("feedback-box");
 
-        allBtns.forEach(b => b.classList.add("disabled-btn", "opacity-50"));
+        // 鎖定按鈕
+        allBtns.forEach(b => b.classList.add("disabled-btn"));
 
         let logText = "";
         if (selectedIndex === correctIndex) {
-            btnElement.classList.remove("opacity-50");
-            btnElement.classList.add("correct-ans");
+            // 盲測模式：不顯示綠色正確，只標記選擇狀態
+            btnElement.classList.add("selected-ans");
             
-            const pointsPerQ = 100 / state.selectedQuestions.length; 
-            state.score += pointsPerQ; 
+            state.rawScore += qData.level; 
+            logText = `Q${state.currentQ + 1}(L${qData.level}):[對] 技師選:${qData.a[selectedIndex]}`;
             
-            logText = `Q${state.currentQ + 1}:[對] 技師選:${qData.a[selectedIndex]}`;
-            fbBox.innerText = "✓ 答對了！";
-            fbBox.className = "p-5 rounded-xl mb-6 font-bold text-center text-lg shadow-sm border border-green-200 bg-green-50 text-green-700 block";
+            if (state.currentDifficultyLevel < 5) state.currentDifficultyLevel++;
         } else {
-            btnElement.classList.remove("opacity-50");
-            btnElement.classList.add("wrong-ans");
-            allBtns[correctIndex].classList.remove("opacity-50");
-            allBtns[correctIndex].classList.add("correct-ans");
-            logText = `Q${state.currentQ + 1}:[錯] 技師選:${qData.a[selectedIndex]} / 正解:${qData.a[correctIndex]}`;
-            fbBox.innerText = `✗ 答錯了！正確答案應為：「${qData.a[correctIndex]}」`;
-            fbBox.className = "p-5 rounded-xl mb-6 font-bold text-center text-lg shadow-sm border border-red-200 bg-red-50 text-red-700 block";
+            // 盲測模式：不顯示紅色錯誤與綠色正解，只標記選擇狀態
+            btnElement.classList.add("selected-ans");
+            
+            logText = `Q${state.currentQ + 1}(L${qData.level}):[錯] 技師選:${qData.a[selectedIndex]} / 正解應為:${qData.a[correctIndex]}`;
+            
+            if (state.currentDifficultyLevel > 1) state.currentDifficultyLevel--;
         }
 
+        // 統一盲測提示，不透漏正誤
+        fbBox.innerText = "✓ 作答已記錄，請前往下一題。";
+        fbBox.className = "p-5 rounded-xl mb-6 font-bold text-center text-lg shadow-sm border border-blue-200 bg-blue-50 text-blue-700 block";
+
         state.logs.push(logText);
-        document.getElementById("next-btn").classList.remove("hidden");
+        
+        // 自動顯示下一題按鈕
+        const nextBtn = document.getElementById("next-btn");
+        nextBtn.classList.remove("hidden");
+        nextBtn.innerText = (state.currentQ === state.maxQuestions - 1) ? "提交並結束測驗" : "前往下一題 ➔";
     }
 
     function nextQuestion() {
         state.currentQ++;
-        if (state.currentQ < state.selectedQuestions.length) {
-            loadQuestion();
+        if (state.currentQ < state.maxQuestions) {
+            loadNextAdaptiveQuestion();
         } else {
             forceSubmit(false); 
         }
     }
 
-    // ★★★ 回歸最穩定且您昨天測試成功的 fetch 傳輸法 ★★★
     function forceSubmit(isAborted) {
         if (!state.inProgress) return; 
         state.inProgress = false; 
-        clearInterval(state.interval); 
         clearInterval(state.qInterval); 
 
         let finalLogs = [...state.logs];
 
         if (isAborted) {
             finalLogs.push("【嚴重警告：技師於此題強行關閉網頁或返回上一頁，疑似作弊】");
-        } else {
-            while (state.currentQ < state.selectedQuestions.length) {
-                if(!state.isAnswered){
-                     const qData = state.selectedQuestions[state.currentQ];
-                     finalLogs.push(`Q${state.currentQ + 1}:[未答] 未作答 / 正解:${qData.a[qData.c]}`);
-                }
-                state.currentQ++;
-                state.isAnswered = false;
-            }
-        }
+        } 
 
-        // 寫入您真實的 Form ID 與欄位對應
-        const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSftyWqZ8Q8tkYGA6bQeSnP2nxZldQoPt2gH7mSXczpfnNloaA/formResponse";
+        // ★ 動態權重換算滿分 100 分 ★
+        // 頂尖考生路徑：Q1(1)+Q2(2)+Q3(3)+Q4(4) + 剩下31題全在Level 5(31*5=155) = 最高 165 分。
+        let maxTheoreticalScore = 165; 
+        let finalScaledScore = Math.round((state.rawScore / maxTheoreticalScore) * 100);
+        if (finalScaledScore > 100) finalScaledScore = 100;
+        
+        finalLogs.push(`--- 【系統判定】最終技術階級：Level ${state.currentDifficultyLevel} (${rankTitles[state.currentDifficultyLevel]}) | 原始加權總分：${state.rawScore} ---`);
+
+        // 新版 Google Form API 路徑與五個欄位對應
+        const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSeUulnH9NeHSapDTQHxBcMZo_AOL3B3igAOseTkYqvR4BJ02Q/formResponse";
         const params = new URLSearchParams();
         params.append("entry.1741632433", state.dealer);
         params.append("entry.1735160920", state.name);
-        params.append("entry.609819735", Math.round(state.score).toString());
+        params.append("entry.609819735", finalScaledScore.toString());
         params.append("entry.1154807191", finalLogs.join(" | "));
+        
+        // 第五個欄位寫入系統評定之最終等級
+        params.append("entry.1486570192", "Level " + state.currentDifficultyLevel + " (" + rankTitles[state.currentDifficultyLevel] + ")");
 
-        // 發送資料到 Google
+        // 背景發送資料到 Google
         fetch(formUrl, {
             method: "POST", 
             mode: "no-cors",
@@ -492,12 +579,12 @@
             body: params.toString()
         }).catch(err => console.log("傳送失敗:", err));
 
-        // 無論發送成功與否，立刻切換至結果畫面
+        // 無論發送成功與否，立刻切換至全盲測之結果畫面
+        isFormSubmitted = true;
         document.getElementById("quiz-screen").classList.add("hidden");
         document.getElementById("result-screen").classList.remove("hidden");
         document.getElementById("res-dealer").innerText = state.dealer;
         document.getElementById("res-name").innerText = state.name;
-        document.getElementById("final-score").innerText = Math.round(state.score);
     }
 </script>
 </body>
