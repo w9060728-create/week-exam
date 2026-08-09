@@ -53,7 +53,7 @@
 </head>
 <body class="bg-gradient-to-br from-slate-100 to-blue-50 text-slate-800 flex items-center justify-center min-h-screen p-4 selection:bg-blue-200">
 
-    <div id="away-notice">⚠️ 偵測到您切換了視窗／分頁，請於 15 秒內返回作答頁面，逾時將自動判定為棄考</div>
+    <div id="away-notice">⚠️ 偵測到您離開了作答頁面，本題計時已暫停，系統將記錄此事件，請盡快返回繼續作答</div>
 
     <div id="login-screen" class="glass-card p-10 rounded-3xl w-full max-w-md transition-all duration-500 mt-8">
         <div class="text-center mb-8">
@@ -312,7 +312,10 @@
         currentDifficultyLevel: 1, 
         maxQuestions: 35,          
         usedQuestions: new Set(),  
-        currentQuestionData: null
+        currentQuestionData: null,
+
+        // 記錄「哪幾題作答期間曾經切換分頁／離開視窗」，僅供備註，不影響交卷
+        awayQuestions: []
     };
 
     // ★ 修正重點 1：獨立的「已送出」旗標，跟 state.inProgress 脫鉤 ★
@@ -321,11 +324,9 @@
     // 真正的作答成績永遠送不出去。
     let hasSubmitted = false;
 
-    // ★ 修正重點 2：離開視窗的「緩衝計時器」，避免手機切換 App／來電／
-    // 通知欄、螢幕鎖定等短暫離開就被誤判為棄考 ★
-    let hiddenTimer = null;
-    const AWAY_GRACE_MS = 15000; // 離開超過 15 秒才視為真正棄考
-
+    // ★ 修正重點 2（第二版）：完全移除「切分頁就強制送出／判定棄考」的邏輯。
+    // 技師工作時本來就會切分頁查 Service Box、試算表等資料，不應被當成棄考。
+    // 現在切分頁只會：①暫停本題計時 ②記錄是第幾題發生過切換，考完仍可正常交卷。
     let isFormSubmitted = false;
 
     const rankTitles = {
@@ -361,35 +362,32 @@
         }
     });
 
-    // ★ 修正過的 visibilitychange：加入 15 秒緩衝，並在畫面上提示使用者，
-    // 使用者只要在時限內切回頁面，就會自動取消棄考判定，不會誤傷正常作答者。★
+    // ★ 修正過的 visibilitychange（第二版）：
+    // 不再有任何「強制送出」或「判定棄考」的行為。
+    // 切分頁只會：①暫停本題倒數計時 ②記錄下是第幾題發生切換（僅供備註）。
+    // 使用者切回來後，會從「暫停當下剩餘的秒數」繼續倒數，不會被扣秒數也不會多送分鐘。
+    // 唯一真正會送出資料的時機，是使用者「真的關閉分頁／瀏覽器」時的 pagehide 事件。
     window.addEventListener("visibilitychange", function() {
         const awayNotice = document.getElementById("away-notice");
 
         if (document.visibilityState === 'hidden' && state.inProgress) {
-            // 顯示提示（如果使用者回來時能看到，僅在極短暫切換時可能看不到，屬正常）
             if (awayNotice) awayNotice.style.display = "block";
 
-            // 先暫停本題計時器，避免使用者因為系統誤差而被本題倒數坑掉
+            // 暫停本題計時器（不歸零、不扣秒數，只是停止倒數）
             clearInterval(state.qInterval);
 
-            hiddenTimer = setTimeout(() => {
-                // 15 秒後仍未返回，才真正視為棄考
-                if (document.visibilityState === 'hidden' && state.inProgress) {
-                    forceSubmit(true);
-                }
-            }, AWAY_GRACE_MS);
+            // 記錄本次切換發生在第幾題，之後會附註在最終送出的紀錄裡
+            const qNo = state.currentQ + 1;
+            if (!state.awayQuestions.includes(qNo)) {
+                state.awayQuestions.push(qNo);
+            }
 
         } else if (document.visibilityState === 'visible') {
             if (awayNotice) awayNotice.style.display = "none";
 
-            // 使用者回來了，取消棄考判定並恢復本題計時
-            if (hiddenTimer) {
-                clearTimeout(hiddenTimer);
-                hiddenTimer = null;
-            }
+            // 從剩餘秒數繼續倒數，不重置計時
             if (state.inProgress && !state.isAnswered) {
-                startQuestionTimer();
+                resumeQuestionTimer();
             }
         }
     });
@@ -443,7 +441,12 @@
         clearInterval(state.qInterval);
         state.qTimer = 120; 
         updateQTimerDisplay();
+        resumeQuestionTimer();
+    }
 
+    // 從目前的 state.qTimer 秒數繼續倒數（不重置），供切回分頁時使用
+    function resumeQuestionTimer() {
+        clearInterval(state.qInterval);
         state.qInterval = setInterval(() => {
             state.qTimer--;
             updateQTimerDisplay();
@@ -579,15 +582,19 @@
 
         state.inProgress = false; 
         clearInterval(state.qInterval); 
-        if (hiddenTimer) { clearTimeout(hiddenTimer); hiddenTimer = null; }
 
         const awayNotice = document.getElementById("away-notice");
         if (awayNotice) awayNotice.style.display = "none";
 
         let finalLogs = [...state.logs];
 
+        // 附註：作答期間曾切換分頁的題號（僅供參考，不影響交卷與分數）
+        if (state.awayQuestions.length > 0) {
+            finalLogs.push(`【備註：作答期間於第 ${state.awayQuestions.join("、")} 題曾切換分頁／離開視窗，已暫停該題計時，不影響作答結果】`);
+        }
+
         if (isAborted) {
-            finalLogs.push("【嚴重警告：技師中途棄考或關閉網頁（已離開頁面超過 15 秒）】");
+            finalLogs.push("【警告：技師關閉網頁或分頁，測驗未完整作答完畢】");
         } 
 
         // 35題的最高可能分數計算：1+2+3+4+ (31*5) = 165
