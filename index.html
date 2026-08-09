@@ -39,16 +39,6 @@
 </head>
 <body class="bg-gradient-to-br from-slate-100 to-blue-50 text-slate-800 flex items-center justify-center min-h-screen p-4 selection:bg-blue-200">
 
-    <!-- ★ 終極防漏單引擎：隱藏 iframe 與完整 5 欄位實體 Form ★ -->
-    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
-    <form id="google-form" action="https://docs.google.com/forms/d/e/1FAIpQLSeUulnH9NeHSapDTQHxBcMZo_AOL3B3igAOseTkYqvR4BJ02Q/formResponse" method="POST" target="hidden_iframe" style="display:none;">
-        <input type="text" name="entry.1741632433" id="gf-dealer">
-        <input type="text" name="entry.1735160920" id="gf-name">
-        <input type="text" name="entry.609819735" id="gf-score">
-        <input type="text" name="entry.1154807191" id="gf-details">
-        <input type="text" name="entry.1486570192" id="gf-level">
-    </form>
-
     <div id="login-screen" class="glass-card p-10 rounded-3xl w-full max-w-md transition-all duration-500 mt-8">
         <div class="text-center mb-8">
             <span class="inline-block p-3 rounded-2xl bg-blue-50 mb-3 shadow-inner">
@@ -99,13 +89,13 @@
 
         <div id="feedback-box" class="hidden p-5 rounded-xl mb-6 font-bold text-center text-lg shadow-sm border"></div>
 
-        <button id="next-btn" onclick="confirmAndNext()" class="hidden w-full bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-800 hover:to-black text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 text-lg tracking-wide">
-            確認並前往下一題 ➔
+        <button id="next-btn" onclick="confirmAndNext()" disabled class="w-full bg-slate-200 text-slate-400 font-bold py-4 rounded-xl transition-all duration-200 text-lg tracking-wide cursor-not-allowed mt-4 hidden">
+            請先選擇答案
         </button>
     </div>
 
     <!-- 盲測專用：絕對不顯示分數與等級的結果畫面 -->
-    <div id="result-screen" class="hidden glass-card p-10 rounded-3xl w-full max-w-md text-center transition-all duration-500 mt-8">
+    <div id="result-screen" class="hidden glass-card p-10 rounded-3xl w-full max-w-md text-center transition-all duration-500 mt-8 mb-20">
         <div class="inline-block p-4 rounded-full bg-green-50 mb-6 shadow-inner">
             <span class="text-5xl">✅</span>
         </div>
@@ -131,7 +121,7 @@
     </div>
 
 <script>
-    // ★ 150 題 長度平衡題庫 (字數均等化，消滅長度作弊，拔除所有爭議題與大師字眼) ★
+    // ★ 150 題 長度平衡題庫 (字數均等化，消滅長度作弊，拔除所有爭議題) ★
     const allQuizData = [
         // ====== Level 1: 助理技師 (30題) ======
         { level: 1, q: "車輛進廠保養時，測量輪胎胎紋深度的法定最低安全標準為何？", a: ["標準極限值為 0.8 mm", "標準極限值為 1.6 mm", "標準極限值為 2.0 mm", "標準極限值為 3.0 mm"], c: 1 },
@@ -145,7 +135,7 @@
         { level: 1, q: "引擎冷卻液 (水箱精) 除了具備防凍與散熱效果外，還具備什麼功能？", a: ["能顯著增加引擎的輸出馬力", "防鏽防腐蝕並具潤滑水泵浦", "能大幅提升車內冷氣壓縮效率", "具備自動清潔引擎內部積碳"], c: 1 },
         { level: 1, q: "常見的 Peugeot 3008/5008 標準 OBD2 診斷接頭，通常位於車內何處？", a: ["位於引擎室左側的保險絲盒內", "位於副駕駛座的手套箱下方處", "位於駕駛座方向盤左下方飾蓋", "位於後車廂備胎旁的隔板內部"], c: 2 },
         { level: 1, q: "現代柴油引擎所配置的 DPF 系統，其在排氣管上的主要功能是什麼？", a: ["專責過濾引擎進氣管內的雜質", "專責過濾排氣中的碳微粒黑煙", "專責降低排氣內氮氧化物成份", "專責有效增加渦輪增壓器壓力"], c: 1 },
-        { level: 1, q: "現代汽油引擎所配置的 GPF 系統，其在排氣管上的主要功能是什麼？", a: ["專責過濾汽油油路內部的雜質", "專責降低汽油引擎排氣之微粒", "專責提升燃油系統的噴油壓力", "專責主動回收油箱揮發的油氣"], c: 1 },
+        { level: 1, q: "現代汽油引擎所配置的 GPF 系統，其在排氣管上的主要功能是什麼？", a: ["專責過濾汽油油路內部的雜質", "專責降低汽油引擎排氣之微粒", "專責提升燃油系統的噴油壓力", "專責主提回收油箱揮發的油氣"], c: 1 },
         { level: 1, q: "車輛實施更換新輪胎後，為了讓電腦重新學習胎壓，必須執行什麼動作？", a: ["必須直接更換儀表板總成模組", "透過車內螢幕執行胎壓初始化", "連續重新啟動引擎開關達三次", "原地靜止猛踩三次煞車踏板"], c: 1 },
         { level: 1, q: "檢查引擎空氣濾清器時，若發現濾芯嚴重髒污阻塞，會造成什麼影響？", a: ["會導致車內空調冷氣明顯不冷", "會導致煞車踏板踩踏感覺變軟", "進氣不足導致動力與油耗變差", "會導致電子方向盤轉向力變重"], c: 2 },
         { level: 1, q: "保養時判斷煞車來令片是否需要更換的最準確客觀依據為何？", a: ["僅根據儀表板行駛的總里程數", "依據來令片摩擦材料剩餘厚度", "觀察煞車踏板踩踏的顏色變化", "根據四輪輪胎胎壓的實際數值"], c: 1 },
@@ -251,7 +241,6 @@
         { level: 4, q: "在 MRI 軟體中觀看波形圖表時，若畫面呈現全滿 (全綠色塊)，技師應特別注意什麼以正確判讀波形？", a: ["檢查右側的 Y 軸電壓與數值單位是否設定錯誤", "檢查左下角的車身碼是否與當前檢修車輛完全匹配", "檢查波形的波峰與波谷落差值是否超出容許公差", "檢查背景的 X 軸時間戳記刻度是否縮放比例過大"], c: 0 },
         { level: 4, q: "執行「真空衰減測試」測漏冷氣管路時，系統抽至深真空後需靜置觀察多久看指針是否回升才算嚴謹？", a: ["靜置觀察 1 到 3 分鐘即可判定管路是否漏氣", "靜置觀察 10 到 15 分鐘確保極微小漏氣也能抓出", "靜置觀察 30 分鐘以上直到真空泵浦完全冷卻", "完全不需要等待抽完真空即可直接充填冷媒測試"], c: 1 },
         { level: 4, q: "EDCT6/MHEV車型故障碼「P2887 01 (電氣故障未特徵化)」通常指向哪一個零件發生異常？", a: ["車輛前方的 48V 啟動發電機內部線圈發生異常", "變速箱內部的駐車撥叉鎖定電磁閥發生電路異常", "變速箱外部的離合器控制液壓泵執行器發生異常", "負責驅動車輛的 48V 電動機 MCU 控制器異常"], c: 1 },
-        { level: 4, q: "承上題，當發生駐車撥叉 P2887 01 故障時，車輛通常會有什麼明顯表徵？", a: ["僅在純電模式下無法順利啟動引擎產生嚴重抖動", "時速超過 60km/h 換檔時會產生極度強烈的頓挫", "無論是否踩踏煞車點火引擎皆完全無法順利啟動", "排入倒車檔時會完全失去動力且儀表亮起紅色警示"], c: 2 },
         { level: 4, q: "DiagBox 紀錄波形中，水溫80度「怠速」狀態下，哪種感知器出現電壓斷訊或平躺是完全正常的？", a: ["排氣管前段的寬域含氧感知器斷訊平躺無法顯示波形", "進氣總成的電子節氣門感知器斷訊平躺無法顯示波形", "燃油系統的高壓泵浦油壓訊號斷訊平躺無法顯示波形", "引擎缸體上的壓電式爆震感知器斷訊平躺無法顯示波形"], c: 3 },
         { level: 4, q: "為什麼爆震感知器在引擎「正常怠速」下，用波形觀察會出現電壓斷訊或極低振幅是合理的？", a: ["因為爆震感知器本身存在硬體瑕疵容易在低速斷訊", "怠速燃燒平順未產生強烈敲擊故無法觸發壓電電壓", "因為引擎電腦為了省電主動切斷了感知器供電電源", "這是車輛準備進入網路休眠模式的正常預備徵兆"], c: 1 },
         { level: 4, q: "Stelvio 儀表不定時顯示「維修報警器」且防盜燈亮起，在診斷時可能指向 BCM 的什麼特定故障碼？", a: ["指向故障碼 P2887-01 (通訊或硬體內部晶片異常)", "指向故障碼 B1073-96 (通訊或硬體內部晶片異常)", "指向故障碼 P0C2A-97 (通訊或硬體內部晶片異常)", "指向故障碼 U1000-00 (通訊或硬體內部晶片異常)"], c: 1 },
@@ -260,6 +249,7 @@
         { level: 4, q: "TCS (防滑循跡控制系統) 在車輛行駛中，會在何種物理情況下被主動啟動以維持其車輛循跡力？", a: ["驅動輪被偵測到相對於非驅動輪發生過度的嚴重打滑", "當車外溫度感知器偵測氣溫低於攝氏 0 度即強制啟動", "當變速箱任何檔位超過電腦規定的最高安全時速限制", "當方向盤轉動的角速度超過極限參數時強制介入啟動"], c: 0 },
         { level: 4, q: "下列哪種精密感知器是由 TCS (循跡控制) 與 VSC (動態穩定) 系統共同使用的核心動態感知器？", a: ["負責偵測駕駛意圖的方向盤轉向角度高精度感知器", "負責偵測四輪輪速差異的四輪獨立輪速精密感知器", "負責偵測車身動態的橫向G力與橫擺角速度感知器", "以上三種感知器皆會被這兩套系統共同讀取與使用"], c: 3 },
         { level: 4, q: "現代車輛配置的 CAN Bus 網路系統,其傳輸線 CAN-High 與 CAN-Low 的終端電阻總成測量值應約為多少？", a: ["測量總成電阻值應為 0 歐姆代表線路短路", "測量總成電阻值應為 60 歐姆代表雙電阻並聯", "測量總成電阻值應為 120 歐姆代表單一電阻", "測量總成電阻值應為無限大代表線路完全斷路"], c: 1 },
+        { level: 4, q: "在進行 Witech 診斷時，若遇到 L1 層級無法解決的軟體異常或深層硬體問題，應向哪一級別尋求原廠支援？", a: ["退回 L0 層級重新收集車主抱怨資料再行處理", "將案件詳細打包並升級至 L2 層級尋求進階支援", "將案件詳細打包並升級至 L3 層級尋求進階支援", "將案件詳細打包並升級至 L4 層級尋求最高支援"], c: 1 },
 
         // ====== Level 5: 資深專家 (網關與極端深度分析) ======
         { level: 5, q: "新世代車系導入的資訊安全網關 (Secure Gateway) 主要資安防護作用為何？", a: ["防止技師未依標準程序作業強制紀錄維修的工單", "阻擋未授權設備寫入指令保護車輛免受駭客遠端攻擊", "限制車輛出廠的最高行駛車速以符合各國法規標準", "提供車內多媒體連網與 Wi-Fi 分享並保護連線安全"], c: 1 },
@@ -294,9 +284,6 @@
         { level: 5, q: "當車輛發生重大撞擊導致 SRS 氣囊全數爆開後，除了更換氣囊與安全帶預縮器外，還必須強制更換什麼控制模組以確保後續安全？", a: ["必須強制更換全車的 ABS 控制模組與四輪輪速感知器", "必須強制更換 SRS 氣囊控制電腦 (因內部硬體鎖死設計)", "必須強制更換引擎主電腦以確保供油系統的安全切斷", "必須強制更換 BSI 車身控制模組以重置全車的防盜密碼"], c: 1 }
     ];
 
-    // ============================================================
-    // ★ 變數定義與防漏單引擎 ★
-    // ============================================================
     let state = {
         dealer: "", name: "", 
         currentQ: 0, 
@@ -304,7 +291,7 @@
         logs: [], 
         qTimer: 120, qInterval: null,
         isAnswered: false, inProgress: false,
-        currentSelection: null, // 用於記錄目前選中的答案索引
+        currentSelection: null, 
         
         currentDifficultyLevel: 1, 
         maxQuestions: 35,          
@@ -436,6 +423,12 @@
         document.getElementById("next-btn").classList.add("hidden");
         document.getElementById("feedback-box").classList.add("hidden");
         
+        // 恢復按鈕預設狀態 (防呆)
+        const nextBtn = document.getElementById("next-btn");
+        nextBtn.disabled = true;
+        nextBtn.className = "w-full bg-slate-200 text-slate-400 font-bold py-4 rounded-xl transition-all duration-200 text-lg tracking-wide cursor-not-allowed mt-4 hidden";
+        nextBtn.innerText = "請先選擇答案";
+        
         clearInterval(state.qInterval);
         
         state.currentQuestionData = getNextQuestion();
@@ -451,7 +444,7 @@
         
         qData.a.forEach((text, idx) => {
             const btn = document.createElement("button");
-            // 拔除鎖定限制，允許再次點擊
+            // 拔除鎖定限制，允許再次點擊更改選項
             btn.className = "w-full text-left px-6 py-4 border-2 rounded-xl font-medium transition-all duration-200 hover:bg-blue-50/50 hover:border-blue-300 bg-white border-slate-200 shadow-sm hover:shadow option-btn text-slate-700 leading-relaxed";
             btn.innerText = text;
             btn.onclick = () => selectAnswer(idx, btn);
@@ -464,17 +457,24 @@
     function selectAnswer(selectedIndex, btnElement) {
         state.currentSelection = selectedIndex;
         
-        // 移除所有按鈕的選中狀態
+        // 移除所有按鈕的選中狀態 (允許更改選擇)
         const allBtns = document.querySelectorAll(".option-btn");
         allBtns.forEach(b => b.classList.remove("selected-ans"));
         
         // 加上藍色選中標籤
         btnElement.classList.add("selected-ans");
 
-        // 顯示確認按鈕
+        // 啟用並顯示確認按鈕
         const nextBtn = document.getElementById("next-btn");
         nextBtn.classList.remove("hidden");
-        nextBtn.innerText = (state.currentQ === state.maxQuestions - 1) ? "確認提交並結束測驗" : "確認並前往下一題 ➔";
+        nextBtn.disabled = false;
+        nextBtn.className = "w-full bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-800 hover:to-black text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 text-lg tracking-wide mt-4";
+        nextBtn.innerText = (state.currentQ >= state.maxQuestions - 1) ? "確認提交並結束測驗" : "確認並前往下一題 ➔";
+        
+        // 確保手機使用者有看到按鈕
+        setTimeout(() => {
+            nextBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
     }
 
     function confirmAndNext() {
@@ -520,7 +520,7 @@
         let finalLogs = [...state.logs];
 
         if (isAborted) {
-            finalLogs.push("【嚴重警告：技師於此題強行關閉網頁或返回上一頁，中途棄考】");
+            finalLogs.push("【嚴重警告：技師中途棄考或關閉網頁】");
         } 
 
         // 35題的最高可能分數計算：1+2+3+4+ (31*5) = 165
@@ -528,37 +528,52 @@
         let finalScaledScore = Math.round((state.rawScore / maxTheoreticalScore) * 100);
         if (finalScaledScore > 100) finalScaledScore = 100;
         
-        finalLogs.push(`--- 【系統判定】最終技術階級：Level ${state.currentDifficultyLevel} (${rankTitles[state.currentDifficultyLevel]}) | 原始加權總分：${state.rawScore} ---`);
+        let finalLevelText = `Level ${state.currentDifficultyLevel} (${rankTitles[state.currentDifficultyLevel]})`;
+        if (isAborted) finalLevelText += " [中途棄考]";
 
+        finalLogs.push(`--- 【系統判定】最終技術階級：${finalLevelText} | 原始加權總分：${state.rawScore} ---`);
+
+        // ★ 動態封包傳輸引擎 (100% 防漏單, 防當機) ★
         const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSeUulnH9NeHSapDTQHxBcMZo_AOL3B3igAOseTkYqvR4BJ02Q/formResponse";
+        
+        const params = new URLSearchParams();
+        params.append("entry.1741632433", state.dealer);        
+        params.append("entry.1735160920", state.name);          
+        params.append("entry.609819735", finalScaledScore.toString()); 
+        params.append("entry.1154807191", finalLogs.join(" | "));      
+        params.append("entry.1486570192", finalLevelText);
 
-        if (isAborted) {
-            // ★ 中途離開專用：使用 sendBeacon 確保網頁關閉時也能送出資料 ★
-            const params = new URLSearchParams();
-            params.append("entry.1741632433", state.dealer);        
-            params.append("entry.1735160920", state.name);          
-            params.append("entry.609819735", finalScaledScore.toString()); 
-            params.append("entry.1154807191", finalLogs.join(" | "));      
-            params.append("entry.1486570192", "Level " + state.currentDifficultyLevel + " (" + rankTitles[state.currentDifficultyLevel] + ") [棄考]");
-            
+        if (isAborted && navigator.sendBeacon) {
             navigator.sendBeacon(formUrl, params);
         } else {
-            // ★ 正常交卷：使用實體表單送出 ★
-            document.getElementById("gf-dealer").value = state.dealer;
-            document.getElementById("gf-name").value = state.name;
-            document.getElementById("gf-score").value = finalScaledScore.toString();
-            document.getElementById("gf-details").value = finalLogs.join(" | ");
-            document.getElementById("gf-level").value = "Level " + state.currentDifficultyLevel + " (" + rankTitles[state.currentDifficultyLevel] + ")";
+            // 動態創建隱藏 iframe 與 form 提交，絕不因遺漏 HTML ID 而當機
+            const iframeName = "hidden_iframe_" + Date.now();
+            const iframe = document.createElement("iframe");
+            iframe.name = iframeName;
+            iframe.style.display = "none";
+            document.body.appendChild(iframe);
 
-            document.getElementById("google-form").submit();
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = formUrl;
+            form.target = iframeName;
+            form.style.display = "none";
 
-            // ★ 強制直接切換畫面，不要依賴 iframe 的 onload 事件 ★
-            setTimeout(() => {
-                document.getElementById("quiz-screen").classList.add("hidden");
-                document.getElementById("result-screen").classList.remove("hidden");
-                document.getElementById("res-dealer").innerText = state.dealer;
-                document.getElementById("res-name").innerText = state.name;
-            }, 600);
+            for (const [key, value] of params.entries()) {
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = key;
+                input.value = value;
+                form.appendChild(input);
+            }
+            document.body.appendChild(form);
+            form.submit();
+
+            // 強制立即切換畫面，不等待瀏覽器回報，絕不卡住！
+            document.getElementById("quiz-screen").classList.add("hidden");
+            document.getElementById("result-screen").classList.remove("hidden");
+            document.getElementById("res-dealer").innerText = state.dealer;
+            document.getElementById("res-name").innerText = state.name;
         }
     }
 </script>
