@@ -35,9 +35,25 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
+        /* 新增：離開視窗時的溫馨提示條，避免使用者誤以為當機 */
+        #away-notice {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: #1e293b;
+            color: #fff;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px 12px;
+            z-index: 9999;
+            display: none;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-100 to-blue-50 text-slate-800 flex items-center justify-center min-h-screen p-4 selection:bg-blue-200">
+
+    <div id="away-notice">⚠️ 偵測到您切換了視窗／分頁，請於 15 秒內返回作答頁面，逾時將自動判定為棄考</div>
 
     <div id="login-screen" class="glass-card p-10 rounded-3xl w-full max-w-md transition-all duration-500 mt-8">
         <div class="text-center mb-8">
@@ -299,6 +315,17 @@
         currentQuestionData: null
     };
 
+    // ★ 修正重點 1：獨立的「已送出」旗標，跟 state.inProgress 脫鉤 ★
+    // 避免「誤判棄考」把 inProgress 設為 false 後，導致使用者真正答完
+    // 最後一題時 forceSubmit() 因為 inProgress 已經是 false 而被直接擋掉、
+    // 真正的作答成績永遠送不出去。
+    let hasSubmitted = false;
+
+    // ★ 修正重點 2：離開視窗的「緩衝計時器」，避免手機切換 App／來電／
+    // 通知欄、螢幕鎖定等短暫離開就被誤判為棄考 ★
+    let hiddenTimer = null;
+    const AWAY_GRACE_MS = 15000; // 離開超過 15 秒才視為真正棄考
+
     let isFormSubmitted = false;
 
     const rankTitles = {
@@ -327,15 +354,43 @@
     });
 
     // 手機切換APP或關閉網頁時的「死亡傳送機制」
+    // 這裡的 pagehide 代表分頁「真的」要被關閉／卸載了，屬於可信任的訊號，予以保留。
     window.addEventListener("pagehide", function(e) {
         if (state.inProgress) {
             forceSubmit(true);
         }
     });
 
+    // ★ 修正過的 visibilitychange：加入 15 秒緩衝，並在畫面上提示使用者，
+    // 使用者只要在時限內切回頁面，就會自動取消棄考判定，不會誤傷正常作答者。★
     window.addEventListener("visibilitychange", function() {
+        const awayNotice = document.getElementById("away-notice");
+
         if (document.visibilityState === 'hidden' && state.inProgress) {
-            forceSubmit(true); 
+            // 顯示提示（如果使用者回來時能看到，僅在極短暫切換時可能看不到，屬正常）
+            if (awayNotice) awayNotice.style.display = "block";
+
+            // 先暫停本題計時器，避免使用者因為系統誤差而被本題倒數坑掉
+            clearInterval(state.qInterval);
+
+            hiddenTimer = setTimeout(() => {
+                // 15 秒後仍未返回，才真正視為棄考
+                if (document.visibilityState === 'hidden' && state.inProgress) {
+                    forceSubmit(true);
+                }
+            }, AWAY_GRACE_MS);
+
+        } else if (document.visibilityState === 'visible') {
+            if (awayNotice) awayNotice.style.display = "none";
+
+            // 使用者回來了，取消棄考判定並恢復本題計時
+            if (hiddenTimer) {
+                clearTimeout(hiddenTimer);
+                hiddenTimer = null;
+            }
+            if (state.inProgress && !state.isAnswered) {
+                startQuestionTimer();
+            }
         }
     });
 
@@ -420,6 +475,7 @@
 
     function loadNextAdaptiveQuestion() {
         state.currentSelection = null; 
+        state.isAnswered = false;
         document.getElementById("next-btn").classList.add("hidden");
         document.getElementById("feedback-box").classList.add("hidden");
         
@@ -485,6 +541,7 @@
 
     function processAnswerAndGoNext() {
         clearInterval(state.qInterval); 
+        state.isAnswered = true;
 
         const qData = state.currentQuestionData;
         const correctIndex = qData.c;
@@ -513,14 +570,24 @@
     }
 
     function forceSubmit(isAborted) {
-        if (!state.inProgress) return; 
+        // ★ 修正重點：用 hasSubmitted（而非 state.inProgress）來防止重複送出。
+        // 這樣即使先前有一次「離開超過15秒」的誤判被送出去過，
+        // 只要那次還沒有真的觸發 forceSubmit（因為有緩衝計時器擋著），
+        // 使用者實際答完 35 題時的最終送出，依然會被正常執行。
+        if (hasSubmitted) return; 
+        hasSubmitted = true;
+
         state.inProgress = false; 
         clearInterval(state.qInterval); 
+        if (hiddenTimer) { clearTimeout(hiddenTimer); hiddenTimer = null; }
+
+        const awayNotice = document.getElementById("away-notice");
+        if (awayNotice) awayNotice.style.display = "none";
 
         let finalLogs = [...state.logs];
 
         if (isAborted) {
-            finalLogs.push("【嚴重警告：技師中途棄考或關閉網頁】");
+            finalLogs.push("【嚴重警告：技師中途棄考或關閉網頁（已離開頁面超過 15 秒）】");
         } 
 
         // 35題的最高可能分數計算：1+2+3+4+ (31*5) = 165
